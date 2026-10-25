@@ -255,7 +255,7 @@ class RecursosMixin:
         i = self._id_em(nx, ny)
         b = self.sel["mapa"].get(i)
         if not b:
-            visor.set_destaque(None)
+            self.soltar_selecao()
             self.status.showMessage("Nada aqui (fundo)", 2000)
             return
         texto = self.sel["texto"]
@@ -267,9 +267,11 @@ class RecursosMixin:
         self.cena.centerCursor()
         self.cena.setFocus()
         self.status.showMessage(f"{selecao.caminho(b)} — linha {sdl.linha_de(texto, b.kw_ini)}   "
-                                "(Ctrl+arrastar na imagem move o objeto)", 6000)
+                                "(arraste as setas para mover, o anel para girar; Esc solta)", 6000)
         visor.set_destaque(self._mascara(i))
         QTimer.singleShot(2500, lambda: visor.set_destaque(None))
+        self.giz_kw = selecao.topo(b).kw_ini      # setas de mover/girar no objeto
+        self._gizmo_atualizar()
 
     def _mascara(self, i):
         """Imagem transparente com o objeto i destacado (preenchimento leve + contorno)."""

@@ -436,7 +436,10 @@ cone { <-1.5, 0, 0>, 0.5, <-1.5, 1.5, 0>, 0 pigment { color Green } }""", {"came
 <li>o menu <b>Inserir</b> tem modelos prontos de objetos, luzes e texturas;</li>
 <li><b>Ctrl + clique</b> num <code>#include</code> abre o arquivo numa aba;</li>
 <li>parar o mouse sobre uma palavra-chave mostra a sintaxe dela;</li>
-<li><b>clicar num objeto na imagem</b> leva à linha dele no código, e <b>Ctrl + arrastar</b> na imagem move o objeto;</li>
+<li><b>clicar num objeto na imagem</b> leva à linha dele no código e mostra <b>setas X/Y/Z</b> (mover num eixo) e um
+<b>anel</b> (girar em y); <b>Ctrl + arrastar</b> na imagem move o objeto no plano da tela;</li>
+<li>enquanto você arrasta alguma coisa, aparece uma <b>prévia rápida</b> em OpenGL (sem sombras nem texturas);
+ao soltar, vem o render do POV-Ray;</li>
 <li><b>F9</b> abre o painel de matrizes: as transformações do objeto sob o cursor como matrizes 4x4,
 na convenção da aula ou na do POV-Ray;</li>
 <li><b>Ctrl+Shift+F</b> formata o código e <b>Ctrl+Shift+X</b> exporta a entrega (.zip com cena, imagem e GIF);</li>

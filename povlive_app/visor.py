@@ -16,6 +16,8 @@ class Visor(QWidget):
     pixel = pyqtSignal(str)
     clicou = pyqtSignal(float, float)        # clique sem arrastar: posição na imagem (0..1)
     objeto = pyqtSignal(str, float, float, int)  # Ctrl+arrastar: ("inicio"|"mover"|"fim", x, y, modificadores)
+    gizmo_sinal = pyqtSignal(str, str, float, float, int)  # (fase, alça "x"|"y"|"z"|"anel", dx, dy, modificadores)
+    esc = pyqtSignal()
 
     def __init__(self, titulo="", modo="normal"):
         super().__init__()
@@ -28,8 +30,13 @@ class Visor(QWidget):
         self.centro = QPointF(320, 240)  # ponto da imagem (coords nominais) no meio da tela
         self.arrasto = None
         self.inicio_clique = None
+        self.moveu = False
         self.movendo_objeto = False
         self.destaque = None   # QImage com o contorno do objeto selecionado
+        self.previa = False    # a imagem atual é a prévia rápida (aproximada)?
+        self.gizmo = None      # {"o": (x,y), "x"/"y"/"z": (x,y), "anel": [(x,y)...]} em coordenadas 0..1
+        self.alca = None       # alça do gizmo sendo arrastada
+        self.setFocusPolicy(Qt.ClickFocus)
         self.warp = (1.0, 0.0, 0.0)  # (escala, dx, dy em frações da imagem): resposta imediata no zoom/mover
         self.vazio = "Sem imagem ainda"
         self.setMouseTracking(True)
@@ -39,7 +46,7 @@ class Visor(QWidget):
     def sizeHint(self):
         return QSize(400, 300)
 
-    def mostrar(self, pix, nominal=None):
+    def mostrar(self, pix, nominal=None, previa=False):
         if nominal and nominal != self.nominal:
             if self.zoom is not None:  # mantém o mesmo ponto da cena no centro
                 self.centro = QPointF(self.centro.x() * nominal.width() / self.nominal.width(),
@@ -47,8 +54,37 @@ class Visor(QWidget):
                 self.zoom *= self.nominal.width() / nominal.width()
             self.nominal = nominal
         self.pix = pix
+        self.previa = previa
         self.warp = (1.0, 0.0, 0.0)
         self.update()
+
+    def set_gizmo(self, g):
+        self.gizmo = g
+        self.update()
+
+    def _tela(self, pn):
+        r = self._retangulo()
+        return QPointF(r.x() + pn[0] * r.width(), r.y() + pn[1] * r.height())
+
+    def _alca_em(self, pos):
+        """Qual alça do gizmo está sob o mouse (ou None)."""
+        g = self.gizmo
+        if not g:
+            return None
+        o = self._tela(g["o"])
+        melhor, dist_min = None, 9.0
+        for k in ("x", "y", "z"):
+            if g.get(k) is None:
+                continue
+            d = _dist_segmento(QPointF(pos), o, self._tela(g[k]))
+            if d < dist_min:
+                melhor, dist_min = k, d
+        if melhor is None and g.get("anel"):
+            pts = [self._tela(p) for p in g["anel"] if p is not None]
+            for a, b in zip(pts, pts[1:] + pts[:1]):
+                if _dist_segmento(QPointF(pos), a, b) < 7:
+                    return "anel"
+        return melhor
 
     def set_destaque(self, img):
         self.destaque = img
@@ -102,6 +138,8 @@ class Visor(QWidget):
             if self.destaque is not None:
                 p.setRenderHint(QPainter.SmoothPixmapTransform, False)
                 p.drawImage(r, self.destaque, QRectF(self.destaque.rect()))
+            if self.gizmo:
+                self._pintar_gizmo(p)
         else:
             p.setPen(QColor("#666"))
             p.drawText(self.rect(), Qt.AlignCenter, self.vazio)
@@ -119,6 +157,13 @@ class Visor(QWidget):
             p.fillRect(4, 4, larg, 18, QColor(0, 0, 0, 160))
             p.setPen(QColor("#ddd"))
             p.drawText(10, 17, texto)
+        if self.previa and self.pix:
+            t = ("prévia rápida (aproximada) — solte para o render do POV-Ray" if self.width() > 700
+                 else "prévia rápida")
+            larg = p.fontMetrics().horizontalAdvance(t) + 12
+            p.fillRect(self.width() - larg - 4, 4, larg, 18, QColor(60, 40, 0, 190))
+            p.setPen(QColor("#ffd77a"))
+            p.drawText(self.width() - larg + 2, 17, t)
         if self.zoom is not None:
             t = f"{self._escala() * 100:.0f}%  (duplo clique: ajustar)"
             larg = p.fontMetrics().horizontalAdvance(t) + 12
@@ -148,8 +193,46 @@ class Visor(QWidget):
                               ponto.y() - (ev.pos().y() - self.height() / 2) / e)
         self.update()
 
+    def _pintar_gizmo(self, p):
+        from PyQt5.QtGui import QPen
+        g = self.gizmo
+        p.setRenderHint(QPainter.Antialiasing, True)
+        o = self._tela(g["o"])
+        if g.get("anel"):
+            pts = [self._tela(q) for q in g["anel"] if q is not None]
+            p.setPen(QPen(QColor(255, 210, 0, 255 if self.alca == "anel" else 170), 3 if self.alca == "anel" else 2))
+            for a, b in zip(pts, pts[1:] + pts[:1]):
+                p.drawLine(a, b)
+        cores = {"x": QColor(255, 70, 70), "y": QColor(80, 230, 80), "z": QColor(90, 140, 255)}
+        for k in ("x", "y", "z"):
+            if g.get(k) is None:
+                continue
+            e = self._tela(g[k])
+            p.setPen(QPen(cores[k], 5 if self.alca == k else 3))
+            p.drawLine(o, e)
+            p.setBrush(cores[k])
+            p.drawEllipse(e, 6, 6)
+            p.setPen(QColor("white"))
+            p.drawText(e + QPointF(8, 4), k.upper())
+        p.setBrush(QColor("white"))
+        p.setPen(QPen(QColor("black"), 1))
+        p.drawEllipse(o, 4, 4)
+
+    def keyPressEvent(self, ev):
+        if ev.key() == Qt.Key_Escape:
+            self.esc.emit()
+        else:
+            super().keyPressEvent(ev)
+
     def mousePressEvent(self, ev):
         self.inicio_clique = ev.pos()
+        self.moveu = False
+        alca = self._alca_em(ev.pos()) if ev.button() == Qt.LeftButton else None
+        if alca:
+            self.alca = alca
+            self.gizmo_sinal.emit("inicio", alca, 0, 0, int(ev.modifiers()))
+            self.update()
+            return
         if ev.button() == Qt.LeftButton and ev.modifiers() & Qt.ControlModifier and self.pix:
             self.movendo_objeto = True
             nx, ny = self._normalizado(ev.pos())
@@ -158,6 +241,14 @@ class Visor(QWidget):
         self.arrasto = (ev.pos(), ev.button())
 
     def mouseMoveEvent(self, ev):
+        if ev.buttons() and self.inicio_clique is not None and (ev.pos() - self.inicio_clique).manhattanLength() >= 4:
+            self.moveu = True   # houve arraste (mesmo que o mouse volte ao ponto inicial)
+        if self.alca:
+            d = ev.pos() - self.inicio_clique
+            self.gizmo_sinal.emit("mover", self.alca, d.x(), d.y(), int(ev.modifiers()))
+            return
+        if self.gizmo and not ev.buttons():
+            self.setCursor(Qt.SizeAllCursor if self._alca_em(ev.pos()) else Qt.ArrowCursor)
         if self.movendo_objeto:
             d = ev.pos() - self.inicio_clique
             self.objeto.emit("mover", d.x(), d.y(), int(ev.modifiers()))
@@ -178,12 +269,18 @@ class Visor(QWidget):
         self._info_pixel(ev.pos())
 
     def mouseReleaseEvent(self, ev):
+        if self.alca:
+            d = ev.pos() - self.inicio_clique
+            alca, self.alca = self.alca, None
+            self.gizmo_sinal.emit("fim", alca, d.x(), d.y(), int(ev.modifiers()))
+            self.update()
+            return
         if self.movendo_objeto:
             self.movendo_objeto = False
             d = ev.pos() - self.inicio_clique
             self.objeto.emit("fim", d.x(), d.y(), int(ev.modifiers()))
             return
-        clique = (self.inicio_clique is not None and ev.button() == Qt.LeftButton
+        clique = (self.inicio_clique is not None and ev.button() == Qt.LeftButton and not self.moveu
                   and (ev.pos() - self.inicio_clique).manhattanLength() < 4)
         if self.arrasto and self.modo_camera and not clique:
             self.soltou.emit()
@@ -212,6 +309,15 @@ class Visor(QWidget):
         if 0 <= px < img.width() and 0 <= py < img.height():
             c = QColor(img.pixel(px, py))
             self.pixel.emit(f"pixel ({int(nx)}, {int(ny)})   rgb <{c.redF():.3f}, {c.greenF():.3f}, {c.blueF():.3f}>")
+
+
+def _dist_segmento(p, a, b):
+    """Distância (px) do ponto p ao segmento ab."""
+    ax, ay, bx, by, px, py = a.x(), a.y(), b.x(), b.y(), p.x(), p.y()
+    dx, dy = bx - ax, by - ay
+    t = 0.0 if dx == dy == 0 else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
+    qx, qy = ax + t * dx - px, ay + t * dy - py
+    return (qx * qx + qy * qy) ** 0.5
 
 
 class QuatroVistas(QWidget):

@@ -91,7 +91,7 @@ for x in j._editores():
     x.document().setModified(False)
 novo_render(j, lambda: j.abas.setCurrentIndex(0))
 j.a_livre.trigger()
-esperar(lambda: ok(j) and j.cache.quadros and not j.cache.construindo(), 120)
+esperar(lambda: ok(j))
 v = j.visor
 quadros = []
 centro = QPointF(v.rect().center())
@@ -113,6 +113,32 @@ for q in quadros:
 imgs[0].save(os.path.join(IMG, "camera_livre.gif"), save_all=True, append_images=imgs[1:], duration=50, loop=0,
              optimize=True)
 print("gerado camera_livre.gif")
+
+# setas de mover/girar: clica no dado
+esperar(lambda: ok(j))
+j.a_livre.trigger()
+esperar(lambda: ok(j) and j.sel is not None and j.sel["chave"] == j._sel_chave())
+from povlive_app import selecao
+img, mapa = j.sel["img"], j.sel["mapa"]
+alvo = None
+for i, b in mapa.items():
+    if selecao.topo(b).kw == "difference":
+        for y in range(0, img.height(), 3):
+            for x in range(0, img.width(), 3):
+                c = img.pixelColor(x, y)
+                if selecao.id_da_cor(c.red(), c.green(), c.blue()) == i:
+                    alvo = ((x + .5) / img.width(), (y + .5) / img.height())
+                    break
+            if alvo:
+                break
+j.visor.clicou.emit(*alvo)
+app.processEvents()
+j.visor.gizmo_sinal.emit("inicio", "x", 0, 0, 0)
+for k in range(1, 8):
+    j.visor.gizmo_sinal.emit("mover", "x", k * 12, 0, 0)
+    app.processEvents()
+salvar(j, "setas.png")
+j.visor.gizmo_sinal.emit("fim", "x", 84, 0, 0)
 for x in j._editores():
     x.document().setModified(False)
 j.close()

@@ -119,3 +119,42 @@ def inserir_translate(texto, b):
             novo = antes.rstrip(" ") + "\n" + indent + "    translate " + vetor + "\n" + indent
     ini_vetor = novo.rfind(vetor)
     return novo + texto[fecha:], (ini_vetor, ini_vetor + len(vetor))
+
+
+def bloco_em(texto, kw_ini):
+    """O bloco de objeto que começa na posição kw_ini (ou None)."""
+    for b in sdl.blocos(texto):
+        if b.kw_ini == kw_ini and b.kw in sdl.OBJETOS:
+            return b
+    return None
+
+
+def garantir_translate(texto, b):
+    """(texto, (início, fim, valor)) do translate final do bloco, criando um se não existir."""
+    tf = translate_final(texto, b)
+    if tf:
+        return texto, tf
+    texto, _ = inserir_translate(texto, b)
+    return texto, translate_final(texto, bloco_em(texto, b.kw_ini))
+
+
+def garantir_rotate(texto, b):
+    """(texto, (início, fim, valor)) de um 'rotate <...>' logo antes do translate final.
+    Girar ali roda o objeto em volta do próprio ponto de referência (o que o translate posiciona)."""
+    texto, (ini_t, _fim_t, _v) = garantir_translate(texto, b)
+    b = bloco_em(texto, b.kw_ini)
+    m = sdl.mascarar(texto)
+    kt = m.rfind("translate", b.abre, ini_t)
+    mr = re.search(r"\brotate\s*(<[^<>{}]*>)\s*$", m[b.abre + 1:kt])
+    if mr:
+        try:
+            v, _ = sdl.avaliar(mr.group(1))
+            if isinstance(v, tuple):
+                ini = b.abre + 1 + mr.start(1)
+                return texto, (ini, b.abre + 1 + mr.end(1), v)
+        except sdl.Desconhecido:
+            pass
+    vetor = "<0, 0, 0>"
+    texto = texto[:kt] + "rotate " + vetor + " " + texto[kt:]
+    ini = kt + len("rotate ")
+    return texto, (ini, ini + len(vetor), (0.0, 0.0, 0.0))

@@ -137,6 +137,7 @@ class Expressao:
 
     def __init__(self, texto, pos, variaveis):
         self.t, self.p, self.vars = texto, pos, variaveis
+        self.extras = []
 
     def _espiar(self):
         m = RX_TOKEN.match(self.t, self.p)
@@ -201,8 +202,24 @@ class Expressao:
                 raise Desconhecido("vetor dentro de vetor")
             if len(comps) == 2:
                 comps.append(0.0)
+            if len(comps) > 3:
+                self.extras = comps[3:]   # filter/transmit de rgbf/rgbt
             return tuple(comps[:3])
         if tipo == "id":
+            if val in ("rgb", "rgbf", "rgbt", "rgbft", "srgb", "color", "colour"):
+                # cor: "rgb <r,g,b>", "color Nome" ou a sintaxe antiga "color red 1 green 0.5 blue 0"
+                if self._espiar()[1] in ("red", "green", "blue", "filter", "transmit"):
+                    comps = {"red": 0.0, "green": 0.0, "blue": 0.0}
+                    while self._espiar()[1] in ("red", "green", "blue", "filter", "transmit"):
+                        nome = self._comer()[1]
+                        valor = self.unario()
+                        if nome in comps and not isinstance(valor, tuple):
+                            comps[nome] = valor
+                        elif nome in ("filter", "transmit") and not isinstance(valor, tuple):
+                            self.extras = [valor]
+                    return (comps["red"], comps["green"], comps["blue"])
+                v = self.unario()
+                return v
             if self._espiar()[1] == "(":
                 if val not in FUNCOES:
                     raise Desconhecido(val)
@@ -226,6 +243,55 @@ class Expressao:
         tipo, val = self._comer()
         if val != s:
             raise Desconhecido(f"esperava {s}")
+
+
+def avaliar_condicao(texto, pos, fim, variaveis):
+    """Condição de #if/#while: expressões com < > <= >= = != & | (entre parênteses)."""
+    trecho = texto[pos:fim].strip()
+    if trecho.startswith("(") and trecho.endswith(")"):
+        trecho = trecho[1:-1]
+    for op in ("|", "&"):
+        partes = _dividir_fora_de_parenteses(trecho, op)
+        if len(partes) > 1:
+            vals = [avaliar_condicao(p_, 0, len(p_), variaveis) for p_ in partes]
+            return any(vals) if op == "|" else all(vals)
+    for op in ("<=", ">=", "!=", "<", ">", "="):
+        partes = _dividir_fora_de_parenteses(trecho, op)
+        if len(partes) == 2:
+            a = avaliar(partes[0], 0, variaveis)[0]
+            b = avaliar(partes[1], 0, variaveis)[0]
+            if isinstance(a, tuple) or isinstance(b, tuple):
+                raise Desconhecido("comparação de vetores")
+            return {"<=": a <= b, ">=": a >= b, "!=": a != b, "<": a < b, ">": a > b, "=": a == b}[op]
+    v, _ = avaliar(trecho, 0, variaveis)
+    if isinstance(v, tuple):
+        raise Desconhecido("condição vetorial")
+    return v != 0
+
+
+def _dividir_fora_de_parenteses(t, op):
+    """Divide t pelo operador op, ignorando o que está dentro de parênteses."""
+    partes, nivel, ini, i = [], 0, 0, 0
+    while i < len(t):
+        c = t[i]
+        if c == "(":
+            nivel += 1
+        elif c == ")":
+            nivel -= 1
+        elif nivel == 0 and t.startswith(op, i):
+            if op in ("<", ">") and t[i + 1:i + 2] == "=":       # é <= ou >=
+                i += 1
+                continue
+            if op == "=" and i > 0 and t[i - 1] in "<>!":         # é o = de <=, >=, !=
+                i += 1
+                continue
+            partes.append(t[ini:i])
+            i += len(op)
+            ini = i
+            continue
+        i += 1
+    partes.append(t[ini:])
+    return partes
 
 
 def avaliar(texto, pos=0, variaveis=None):

@@ -13,6 +13,7 @@ from .editor import Editor, BarraBusca
 from .visor import Visor, QuatroVistas, Historico
 from .cache_orbita import CacheOrbita, angulo_dif
 from .recursos import RecursosMixin
+from .interacao import InteracaoMixin
 
 MAX_LIVE = 4   # renders simultâneos enquanto arrasta a câmera livre
 
@@ -44,6 +45,7 @@ ATALHOS = """<table cellspacing=4>
 <tr><td>F9</td><td>painel de matrizes do objeto sob o cursor</td></tr>
 <tr><td>Clique na imagem</td><td>vai para a linha do objeto clicado</td></tr>
 <tr><td>Ctrl + arrastar na imagem</td><td>move o objeto (Shift = passos de 0.1)</td></tr>
+<tr><td>Setas X/Y/Z e anel do objeto clicado</td><td>movem num eixo / giram em y (Shift = passos maiores); Esc solta</td></tr>
 <tr><td>Roda / arrastar / duplo clique na imagem</td><td>zoom / mover / ajustar</td></tr>
 <tr><td>Ctrl+0 / Ctrl+1</td><td>ajustar à janela / tamanho real</td></tr>
 <tr><td colspan=2><b>Ajuda</b></td></tr>
@@ -57,7 +59,7 @@ ATALHOS = """<table cellspacing=4>
 </table>"""
 
 
-class Janela(RecursosMixin, QMainWindow):
+class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
     def __init__(self, arquivos=()):
         super().__init__()
         self.cfg = QSettings("povlive", "povlive")
@@ -93,6 +95,7 @@ class Janela(RecursosMixin, QMainWindow):
         self._montar_recursos()
         self._menus()
         self._barras()
+        self._montar_interacao()
 
         self.timer = QTimer(singleShot=True, interval=400)
         self.timer.timeout.connect(self.pedir_render)
@@ -244,10 +247,14 @@ class Janela(RecursosMixin, QMainWindow):
                                  "Miniaturas de cada render (F8)")
         self.a_mat = self._acao("Painel de matrizes", self.mostrar_matrizes, "F9", True,
                                 "Matrizes das transformações do objeto sob o cursor (F9)")
+        self.a_previa3d = self._acao("Prévia instantânea (OpenGL) ao arrastar", lambda _: None, None, True,
+                                     "Enquanto você arrasta câmera, números, objetos ou o clock, mostra uma prévia "
+                                     "aproximada na hora; ao soltar, vem o render do POV-Ray")
+        self.a_previa3d.setChecked(True)
         for acao, curto in ((self.a_eixos, "Eixos"), (self.a_quatro, "4 vistas"), (self.a_copiar, "Copiar câmera"),
                             (self.a_fixar, "Comparar"), (self.a_hist, "Histórico"), (self.a_mat, "Matrizes")):
             acao.setIconText(curto)  # texto mais curto na barra de ferramentas
-        for a in (self.a_eixos, self.a_previa, None, self.a_quatro, self.a_livre, self.a_copiar, None,
+        for a in (self.a_eixos, self.a_previa, self.a_previa3d, None, self.a_quatro, self.a_livre, self.a_copiar, None,
                   self.a_fixar, self.a_hist, self.a_mat, None):
             m.addSeparator() if a is None else m.addAction(a)
         m.addAction(self._acao("Ajustar imagem à janela", lambda: [v.ajustar() for v in self._visores()], "Ctrl+0"))
@@ -363,6 +370,7 @@ class Janela(RecursosMixin, QMainWindow):
         for w in ws:
             w.blockSignals(False)
         self._mostrar_historico(self.a_hist.isChecked())
+        self.a_previa3d.setChecked(c.value("previa3d", "true") == "true")
         if c.value("conv_matrizes", "aula") == "pov":
             self.rb_pov.setChecked(True)
         if c.value("matrizes", "false") == "true":
@@ -383,6 +391,7 @@ class Janela(RecursosMixin, QMainWindow):
         c.setValue("previa", "true" if self.a_previa.isChecked() else "false")
         c.setValue("historico", "true" if self.a_hist.isChecked() else "false")
         c.setValue("matrizes", "true" if self.a_mat.isChecked() else "false")
+        c.setValue("previa3d", "true" if self.a_previa3d.isChecked() else "false")
         c.setValue("conv_matrizes", "aula" if self.rb_aula.isChecked() else "pov")
         c.setValue("sessao", [e.caminho for e in self._editores() if e.caminho])
         c.setValue("aba_atual", self.abas.currentIndex())
@@ -466,6 +475,8 @@ class Janela(RecursosMixin, QMainWindow):
                 self.cena = e
                 self.historico.carregar(e.caminho)
                 self.sel = None
+                if hasattr(self, "giz_kw"):
+                    self.soltar_selecao()
                 if self.orbita:
                     self.orbita = pov.Orbita(pov.ler_camera(e.toPlainText()))
                 self._atualizar_includes()
@@ -608,6 +619,7 @@ class Janela(RecursosMixin, QMainWindow):
                 ev.ignore()
                 return
         self.tocando = False
+        self.play_timer.stop()
         self._parar()
         self._live_parar()
         self.cache.parar()
@@ -649,7 +661,8 @@ class Janela(RecursosMixin, QMainWindow):
             if v.destaque is not None:
                 v.set_destaque(None)
         if e.arraste:
-            self.pedir_render()      # arrastando número/cor: renderiza na hora
+            if not self.mostrar_previa():
+                self.pedir_render()  # sem prévia: renderiza na hora (o render normal)
         elif self.ck_auto.isChecked():
             self.timer.start()
 
@@ -762,7 +775,9 @@ class Janela(RecursosMixin, QMainWindow):
             self.fim_zoom.start()    # a roda não tem "soltar": considera solto após uma pausa
         p = self.orbita.posicao()
         self.status.showMessage(f"câmera: location {pov.fmt_vetor(p)}  look_at {pov.fmt_vetor(self.orbita.alvo)}")
-        self._mostrar_melhor()
+        if self.mostrar_previa():      # prévia instantânea em OpenGL
+            return
+        self._mostrar_melhor()         # sem OpenGL: cache de órbita + renders em paralelo
         self.live_pendente = True
         self._live_lancar()
 
@@ -970,9 +985,22 @@ class Janela(RecursosMixin, QMainWindow):
 
     def _clock_mudou(self, v):
         self.lb_clock.setText(f" {v / 1000:.3f} ")
+        if self.sl_clock.isSliderDown() and self.mostrar_previa():
+            return                   # arrastando a barra: prévia; o render vem ao soltar
         self.pedir_render()
 
     def tocar(self):
+        if self.play_timer.isActive():          # parar a animação suave
+            self.play_timer.stop()
+            self.bt_play.setText("▶")
+            self.pedir_render()
+            return
+        if not self.tocando and self.previa_ativa():
+            # com a prévia, a animação roda suave (30 quadros/s) em vez de esperar cada render
+            self.play_t0 = time.time() - self._clock() * 4.0
+            self.bt_play.setText("⏸")
+            self.play_timer.start()
+            return
         self.tocando = not self.tocando
         self.bt_play.setText("⏸" if self.tocando else "▶")
         if self.tocando:
@@ -1150,8 +1178,10 @@ class Janela(RecursosMixin, QMainWindow):
 
         if job in ("final", "grande"):
             self._atualizar_includes()
-            if ok and self.orbita:
+            if ok and self.orbita and not self.previa_ativa():
                 self.cache_timer.start()
+            if ok:
+                self._gizmo_atualizar()
             if ok:
                 self._mostrar_avisos(resultados[0][1])
                 if not self.interagindo and not self.cena.arraste:

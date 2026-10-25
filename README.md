@@ -18,13 +18,20 @@ com o mouse**, **quatro vistas**, um **guia com 33 exemplos** e **exercícios co
 - Os `.inc` abertos em abas entram no render mesmo sem salvar.
 
 **Interagir com a imagem**
-- **Clique num objeto** e o cursor vai para a linha dele no código.
-- **Ctrl + arrastar um objeto** move ele; o `translate` no código é atualizado sozinho.
-- **Câmera livre (F6)**: girar, mover e aproximar com o mouse, sem travar (veja [como](#como-a-câmera-livre-fica-fluida)). **Shift+F6** copia a câmera escolhida para o código.
+- **Prévia instantânea em OpenGL**: enquanto você arrasta a câmera, um número, um objeto ou a barra do `clock`,
+  a cena é desenhada na hora (mais de 60 quadros por segundo); ao soltar, vem o render do POV-Ray.
+- **Clique num objeto** e o cursor vai para a linha dele no código; aparecem **setas X/Y/Z** para mover num eixo
+  e um **anel** para girar. O `translate`/`rotate` no código é atualizado sozinho (um Ctrl+Z desfaz).
+- **Ctrl + arrastar um objeto** move ele no plano da tela.
+- **Câmera livre (F6)**: girar, mover e aproximar com o mouse (veja [como](#como-a-câmera-livre-fica-fluida)).
+  **Shift+F6** copia a câmera escolhida para o código.
+- **Animação**: a barra do `clock` e o ▶ tocam a animação suave, com a prévia.
 - **Quatro vistas (F7)**: perspectiva, frente, topo e lado, com câmeras ortográficas.
 - Eixos X/Y/Z, comparação antes/depois, histórico de versões salvo em disco e zoom com leitura do pixel.
 
 <p align="center"><img src="docs/img/camera_livre.gif" width="480" alt="Câmera livre girando em volta da cena"></p>
+
+![Setas de mover/girar e prévia instantânea](docs/img/setas.png)
 
 **Estudo**
 - **Painel de matrizes (F9)**: as transformações do objeto sob o cursor como matrizes 4×4, passo a passo, na convenção
@@ -50,14 +57,14 @@ em alta, o GIF e um LEIAME com o comando para renderizar.
 **Pacote .deb** (Ubuntu, Debian, Pop!_OS, Mint) — baixe em [Releases](https://github.com/willehersomo/povlive/releases):
 
 ```bash
-sudo apt install ./povlive_3.0.0_all.deb    # instala também povray, PyQt5 e Pillow
+sudo apt install ./povlive_3.1.0_all.deb    # instala também povray, PyQt5 e Pillow
 povlive cena.pov
 ```
 
 **Direto do código**:
 
 ```bash
-sudo apt install povray povray-includes python3-pyqt5 python3-pil python3-numpy
+sudo apt install povray povray-includes python3-pyqt5 python3-pil python3-numpy python3-opengl
 git clone https://github.com/willehersomo/povlive.git
 python3 povlive/povlive.py cena.pov
 ```
@@ -71,18 +78,25 @@ interessantes:
 
 ### Como a câmera livre fica fluida
 Medindo, todo render do POV-Ray 3.7 leva ~0,75 s **mesmo para uma cena vazia em 160×120** — é um custo fixo de
-inicialização. Diminuir a imagem não ajuda. Então, com a câmera livre ligada e o mouse parado, o app pré-renderiza
+inicialização. Diminuir a imagem não ajuda. Por isso, durante qualquer arraste o app usa uma **prévia em OpenGL**:
+um interpretador próprio executa o básico da linguagem (`#declare`, `#for`, `#while`, `#if`, `#macro`) e transforma
+os objetos em triângulos (esferas, caixas, cilindros, cones, toros, planos, prismas, lathe, blob, CSG), com as
+mesmas matrizes do painel de matrizes. Interpretar leva ~5 ms e desenhar ~9 ms. Nos testes, a silhueta da prévia
+coincide com a do POV-Ray (IoU > 0,93). É uma aproximação: sem sombras nem texturas detalhadas, e `difference`/
+`intersection` mostram só a primeira peça.
+
+Sem OpenGL, o app usa um plano B: com a câmera livre ligada e o mouse parado, ele pré-renderiza
 a cena em 36 ângulos × 7 alturas (252 imagens) usando o modo de animação do POV-Ray: 12 processos em prioridade baixa,
 cada um com uma faixa de quadros (`+SF`/`+EF`), e a cena calcula a câmera de cada quadro a partir de `frame_number`.
 A ordem dos quadros é intercalada para os ângulos mais próximos da vista atual ficarem prontos primeiro.
 Ao arrastar, aparece o quadro mais próximo, e até 4 renders da posição exata rodam em paralelo.
 No zoom e no mover, a imagem atual é deformada na hora até o render exato chegar.
 
-| | sem cache | com cache |
-|---|---|---|
-| primeira resposta ao arrastar | 0,8 s | 0,02 s |
-| imagens novas por segundo | 4 | 12,5 |
-| atraso médio em relação ao mouse | > 100° | 2,5° |
+| | só renders | cache (plano B) | prévia OpenGL |
+|---|---|---|---|
+| primeira resposta ao arrastar | 0,8 s | 0,02 s | 0,01 s |
+| imagens novas por segundo | 4 | 12,5 | > 60 |
+| atraso em relação ao mouse | > 100° | 2,5° (passos de 10°) | nenhum |
 
 ### Como o clique acha o objeto
 O app renderiza (em segundo plano) uma cópia da cena em que cada objeto ganha uma cor única e chapada:
@@ -99,7 +113,9 @@ povlive_app/
   janela.py             janela principal, abas e motor de render (prévia → final, 4 vistas)
   recursos.py           matrizes, avisos, seleção/arraste na imagem, exercícios, entrega
   editor.py             editor de código (sintaxe, pares, autocompletar, busca)
-  visor.py              visor de imagem (zoom, câmera livre, destaque), 4 vistas, histórico
+  visor.py              visor de imagem (zoom, câmera livre, destaque, setas), 4 vistas, histórico
+  previa3d.py           prévia instantânea: interpretador da cena + desenho em OpenGL
+  interacao.py          prévia durante os arrastes, setas de mover/girar, animação suave
   cache_orbita.py       cache de órbita da câmera livre
   sdl.py                leitura do código POV-Ray: blocos, expressões, transformações
   matrizes.py           matrizes 4×4 nas duas convenções
@@ -117,10 +133,10 @@ extras/povlive_web.py   primeira versão (editor no navegador)
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 83 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
+São 93 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
 tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia (nenhum pode dar erro ou aviso), os 7
 exercícios (o gabarito passa e o código inicial não) e testes de integração que abrem o app, digitam, clicam e
-arrastam na imagem, exportam a entrega e conferem o histórico. O CI roda tudo em cada push e gera o `.deb`;
+arrastam na imagem, exportam a entrega e conferem o histórico, além da prévia em OpenGL (a silhueta tem que coincidir com a do POV-Ray). O CI roda tudo em cada push e gera o `.deb`;
 numa tag `v*`, o `.deb` é publicado em Releases.
 
 Para regerar os prints: `python3 docs/gerar_imagens.py`.
