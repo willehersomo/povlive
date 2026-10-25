@@ -37,6 +37,8 @@ jobs:
   app:
     needs: povray
     runs-on: windows-2022
+    permissions:
+      contents: write       # para publicar o instalador na release
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
