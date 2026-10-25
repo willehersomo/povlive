@@ -8,13 +8,14 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPlainTextEdit, QWidget,
                              QSlider, QDoubleSpinBox, QVBoxLayout, QInputDialog, QProgressDialog,
                              QToolButton, QTabWidget, QStackedWidget)
 
-from . import pov, plataforma
+from . import pov, plataforma, navegar
 from .editor import Editor, BarraBusca
 from .visor import Visor, QuatroVistas, Historico
 from .cache_orbita import CacheOrbita, angulo_dif
 from .recursos import RecursosMixin
 from .interacao import InteracaoMixin
 from .biblioteca import TexturasMixin
+from .arvore import ArvoreMixin
 from .i18n import tr, N_, IDIOMAS, idioma
 from . import i18n
 
@@ -31,6 +32,8 @@ ATALHOS = [
     (N_("Ctrl+Espaço"), N_("autocompletar")),
     ("Ctrl+F / Ctrl+H", N_("buscar / substituir")),
     ("Ctrl+L", N_("ir para linha")),
+    (N_("F12 ou Ctrl + clique num nome"), N_("ir para a definição (#declare, #macro), mesmo dentro de um .inc")),
+    ("F2", N_("renomear um nome em todo o arquivo")),
     ("Ctrl+/", N_("comentar / descomentar linhas")),
     ("Tab / Shift+Tab", N_("indentar / desindentar seleção")),
     ("Ctrl+Shift+D", N_("duplicar linha")),
@@ -46,6 +49,7 @@ ATALHOS = [
     ("Ctrl+E", N_("eixos X/Y/Z")),
     ("Ctrl+P", N_("fixar imagem para comparar")),
     ("F9", N_("painel de matrizes do objeto sob o cursor")),
+    ("F4", N_("árvore da cena (clique num objeto para ir ao código e vê-lo na imagem)")),
     ("F10", N_("biblioteca de texturas (duplo clique aplica; arraste até o objeto na imagem)")),
     (N_("Clique na imagem"), N_("vai para a linha do objeto clicado")),
     (N_("Ctrl + arrastar na imagem"), N_("move o objeto (Shift = passos de 0.1)")),
@@ -73,7 +77,7 @@ def atalhos_html():
     return "<table cellspacing=4>\n" + "\n".join(linhas) + "\n</table>"
 
 
-class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
+class Janela(ArvoreMixin, TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
     def __init__(self, arquivos=()):
         super().__init__()
         self.cfg = QSettings("povlive", "povlive")
@@ -108,6 +112,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         self._montar()
         self._montar_recursos()
         self._montar_texturas()
+        self._montar_arvore()
         self._menus()
         self._barras()
         self._montar_interacao()
@@ -191,6 +196,15 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         self.setCentralWidget(self.sp_meio)
 
         self.status = self.statusBar()
+        from PyQt5.QtWidgets import QProgressBar
+        self.pb_render = QProgressBar(maximumWidth=160, maximumHeight=16, textVisible=True)
+        self.pb_render.hide()
+        self.bt_cancelar = QToolButton(text="✕", toolTip=tr("Cancelar o render"))
+        self.bt_cancelar.setAutoRaise(True)
+        self.bt_cancelar.clicked.connect(self.cancelar_render)
+        self.bt_cancelar.hide()
+        self.status.addPermanentWidget(self.pb_render)
+        self.status.addPermanentWidget(self.bt_cancelar)
         self.lb_pixel = QLabel()
         self.lb_pixel.setStyleSheet("color:#999;font-family:monospace")
         self.status.addPermanentWidget(self.lb_pixel)
@@ -220,6 +234,8 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         m.addSeparator()
         m.addAction(self._acao(tr("Salvar imagem PNG…"), self.exportar_png, "Ctrl+Shift+E"))
         m.addAction(self._acao(tr("Exportar animação GIF…"), self.exportar_gif, "Ctrl+G"))
+        m.addAction(self._acao(tr("Importar modelo 3D (OBJ/STL)…"), self.importar_modelo,
+                               dica=tr("Converte para mesh2 num .inc ao lado da cena e acrescenta o objeto")))
         m.addAction(self._acao(tr("Exportar entrega (.zip)…"), self.exportar_entrega, "Ctrl+Shift+X",
                                dica=tr("Cena, .inc, imagem em alta, GIF (se animada) e LEIAME num .zip")))
         m.addSeparator()
@@ -232,6 +248,8 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         m.addAction(self._acao(tr("Buscar…"), lambda: self.busca.abrir(), QKeySequence.Find))
         m.addAction(self._acao(tr("Substituir…"), lambda: self.busca.abrir(True), "Ctrl+H"))
         m.addAction(self._acao(tr("Ir para linha…"), self.ir_para_linha, "Ctrl+L"))
+        m.addAction(self._acao(tr("Ir para a definição"), lambda: self.ir_para_definicao(), "F12"))
+        m.addAction(self._acao(tr("Renomear…"), lambda: self.renomear(), "F2"))
         m.addSeparator()
         m.addAction(self._acao(tr("Comentar/descomentar"), lambda: self.ed().comentar(), "Ctrl+/"))
         m.addAction(self._acao(tr("Duplicar linha"), lambda: self.ed().duplicar_linha(), "Ctrl+Shift+D"))
@@ -267,15 +285,17 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
                                      tr("Enquanto você arrasta câmera, números, objetos ou o clock, mostra uma prévia "
                                         "aproximada na hora; ao soltar, vem o render do POV-Ray"))
         self.a_previa3d.setChecked(True)
+        self.a_arv = self._acao(tr("Árvore da cena"), self.mostrar_arvore, "F4", True,
+                                tr("Objetos da cena em hierarquia: clique para ir ao código e ver na imagem (F4)"))
         self.a_tex = self._acao(tr("Biblioteca de texturas"), self.mostrar_texturas, "F10", True,
                                 tr("Texturas prontas do POV-Ray com miniaturas: arraste uma até o objeto (F10)"))
         for acao, curto in ((self.a_eixos, tr("Eixos")), (self.a_quatro, tr("4 vistas")),
                             (self.a_copiar, tr("Copiar câmera")), (self.a_fixar, tr("Comparar")),
                             (self.a_hist, tr("Histórico")), (self.a_mat, tr("Matrizes")),
-                            (self.a_tex, tr("Texturas"))):
+                            (self.a_tex, tr("Texturas")), (self.a_arv, tr("Cena"))):
             acao.setIconText(curto)  # texto mais curto na barra de ferramentas
         for a in (self.a_eixos, self.a_previa, self.a_previa3d, None, self.a_quatro, self.a_livre, self.a_copiar, None,
-                  self.a_fixar, self.a_hist, self.a_mat, self.a_tex, None):
+                  self.a_fixar, self.a_hist, self.a_mat, self.a_tex, self.a_arv, None):
             m.addSeparator() if a is None else m.addAction(a)
         m.addAction(self._acao(tr("Ajustar imagem à janela"), lambda: [v.ajustar() for v in self._visores()],
                                "Ctrl+0"))
@@ -356,6 +376,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         tb.addAction(self.a_hist)
         tb.addAction(self.a_mat)
         tb.addAction(self.a_tex)
+        tb.addAction(self.a_arv)
         tb.addSeparator()
         self.bt_play = QToolButton(text="▶", toolTip=tr("Tocar animação (varia o clock de 0 a 1)"))
         self.bt_play.clicked.connect(self.tocar)
@@ -394,7 +415,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
             self.restoreGeometry(c.value("geometria"))
         else:
             self.resize(1450, 880)
-        for sp, k in ((self.sp_meio, "sp_meio"), (self.sp_esq, "sp_esq"), (self.sp_dir, "sp_dir")):
+        for sp, k in ((self.sp_meio, "sp_meio2"), (self.sp_esq, "sp_esq"), (self.sp_dir, "sp_dir")):
             if c.value(k):
                 sp.restoreState(c.value(k))
         ws = (self.cb_q, self.cb_t, self.ck_auto, self.sp_eixos, self.a_eixos, self.a_previa, self.a_hist)
@@ -419,12 +440,15 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         if c.value("texturas", "false") == "true":
             self.a_tex.setChecked(True)
             self.mostrar_texturas(True)
+        if c.value("arvore", "false") == "true":
+            self.a_arv.setChecked(True)
+            self.mostrar_arvore(True)
         self._montar_recentes()
 
     def _guardar(self):
         c = self.cfg
         c.setValue("geometria", self.saveGeometry())
-        for sp, k in ((self.sp_meio, "sp_meio"), (self.sp_esq, "sp_esq"), (self.sp_dir, "sp_dir")):
+        for sp, k in ((self.sp_meio, "sp_meio2"), (self.sp_esq, "sp_esq"), (self.sp_dir, "sp_dir")):
             c.setValue(k, sp.saveState())
         c.setValue("qualidade", self.cb_q.currentIndex())
         c.setValue("tamanho", self.cb_t.currentIndex())
@@ -435,6 +459,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         c.setValue("historico", "true" if self.a_hist.isChecked() else "false")
         c.setValue("matrizes", "true" if self.a_mat.isChecked() else "false")
         c.setValue("texturas", "true" if self.a_tex.isChecked() else "false")
+        c.setValue("arvore", "true" if self.a_arv.isChecked() else "false")
         c.setValue("previa3d", "true" if self.a_previa3d.isChecked() else "false")
         c.setValue("conv_matrizes", "aula" if self.rb_aula.isChecked() else "pov")
         c.setValue("sessao", [e.caminho for e in self._editores() if e.caminho])
@@ -480,7 +505,11 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         e.arrasteValor.connect(lambda v: self.status.showMessage(tr("valor: {}").format(v)))
         e.arrasteFim.connect(self.pedir_render)
         e.abrirInclude.connect(lambda nome, e=e: self._abrir_include(e, nome))
+        e.irDefinicao.connect(lambda nome, e=e: self.ir_para_definicao(e, nome))
+        e.pedirRenomear.connect(lambda nome, e=e: self.renomear(e, nome))
         e.cursorPositionChanged.connect(self._mat_agendar)
+        e.cursorPositionChanged.connect(self._arvore_agendar)
+        e.textChanged.connect(self._arvore_agendar)
         i = self.abas.addTab(e, "")
         self._rotulo(e)
         e.atualizar_palavras(pov.declaracoes(texto, e.pasta))
@@ -527,6 +556,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
                 self.pedir_render()
         self.busca._mudou() if self.busca.isVisible() else None
         self._mat_agendar()
+        self._arvore_agendar()
         self._titulo()
 
     def abrir_arquivo(self, caminho, renderizar=True):
@@ -682,6 +712,89 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
                                     e.textCursor().blockNumber() + 1, 1, e.blockCount())
         if ok:
             e.ir_para(n)
+
+    def importar_modelo(self):
+        from . import importar, texturas
+        e = self.cena
+        if e is None:
+            return
+        if not e.caminho:
+            QMessageBox.information(self, tr("Importar modelo 3D"),
+                                    tr("Salve a cena primeiro: o modelo vira um .inc na mesma pasta."))
+            if not self.salvar_como(e):
+                return
+        arq, _ = QFileDialog.getOpenFileName(self, tr("Importar modelo 3D"), e.pasta,
+                                             tr("Modelos 3D (*.obj *.stl *.OBJ *.STL)"))
+        if not arq:
+            return
+        try:
+            inc, nome, n = importar.importar(arq, e.pasta)
+        except (importar.ModeloInvalido, ValueError, OSError) as ex:
+            QMessageBox.warning(self, tr("Importar modelo 3D"), tr("Não consegui ler o modelo ({}).").format(ex))
+            return
+        texto, _ = texturas.garantir_include(e.toPlainText(), os.path.basename(inc))
+        if not texto.endswith("\n"):
+            texto += "\n"
+        texto += ("\n// " + tr("modelo importado de {}").format(os.path.basename(arq)) + "\n"
+                  f"object {{\n    {nome}\n    pigment {{ color rgb <0.8, 0.75, 0.7> }}\n"
+                  "    translate <0, 0, 0>\n}\n")
+        self._substituir_texto(e, texto)
+        c = e.textCursor()
+        c.setPosition(len(e.toPlainText()) - 2)
+        e.setTextCursor(c)
+        e.ensureCursorVisible()
+        self._atualizar_includes()
+        self.status.showMessage(tr("{} importado: {} triângulos em {}").format(nome, n, os.path.basename(inc)), 6000)
+
+    def ir_para_definicao(self, e=None, nome=None):
+        e = e or self.ed()
+        nome = nome or e.palavra_no_cursor()
+        if not nome:
+            return
+        outros = [(x.caminho, x.toPlainText()) for x in self._editores() if x.caminho]
+        achado = navegar.achar(e.toPlainText(), e.pasta, nome, outros)
+        if achado is None:
+            self.status.showMessage(tr("Não achei a definição de {}").format(nome), 3000)
+            return
+        onde, pos = achado
+        if onde != "aqui":
+            e = self._editor_de(onde) or self.abrir_arquivo(onde, renderizar=False)
+            if not e:
+                return
+            self.abas.setCurrentWidget(e)
+        c = e.textCursor()
+        c.setPosition(pos)
+        c.setPosition(pos + len(nome), QTextCursor.KeepAnchor)
+        e.setTextCursor(c)
+        e.centerCursor()
+        e.setFocus()
+
+    def renomear(self, e=None, nome=None):
+        e = e or self.ed()
+        nome = nome or e.palavra_no_cursor()
+        texto = e.toPlainText()
+        if not nome or navegar.definicao(texto, nome) is None:
+            self.status.showMessage(tr("Ponha o cursor num nome definido neste arquivo (#declare, #local ou #macro)"),
+                                    4000)
+            return
+        novo, ok = QInputDialog.getText(self, tr("Renomear"), tr("Novo nome para {}:").format(nome), text=nome)
+        novo = novo.strip()
+        if not ok or novo == nome:
+            return
+        try:
+            resultado, n = navegar.renomear(texto, nome, novo)
+        except navegar.NomeInvalido as ex:
+            msgs = {"formato": tr("Nome inválido: use letras, números e _ (sem começar com número)."),
+                    "reservada": tr("{} é uma palavra do POV-Ray.").format(novo),
+                    "existe": tr("{} já existe neste arquivo.").format(novo)}
+            QMessageBox.warning(self, tr("Renomear"), msgs[str(ex)])
+            return
+        linha = e.textCursor().blockNumber()
+        self._substituir_texto(e, resultado)
+        b = e.document().findBlockByNumber(linha)
+        if b.isValid():
+            e.setTextCursor(QTextCursor(b))
+        self.status.showMessage(tr("{} trocas de {} por {} (Ctrl+Z desfaz)").format(n, nome, novo), 5000)
 
     def escolher_cor(self):
         if not self.ed().escolher_cor():
@@ -1062,6 +1175,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         return any(p.state() != QProcess.NotRunning for p, _ in self.procs)
 
     def _parar(self):
+        self._esconder_progresso()
         for p, _ in self.procs:
             if p.state() != QProcess.NotRunning:
                 p.finished.disconnect()
@@ -1102,8 +1216,8 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
             texto += self.orbita.pov()
         return texto
 
-    def _args(self, fonte, saida, w, h, q, aa, clock=None):
-        a = [f"+I{fonte}", f"+O{saida}", f"+W{w}", f"+H{h}", "-D", "-V", "+FN", f"+Q{q}",
+    def _args(self, fonte, saida, w, h, q, aa, clock=None, progresso=False):
+        a = [f"+I{fonte}", f"+O{saida}", f"+W{w}", f"+H{h}", "-D", "+V" if progresso else "-V", "+FN", f"+Q{q}",
              f"+L{self._pasta()}"]
         if clock is not None:
             a.append(f"+K{clock:.4f}")
@@ -1154,6 +1268,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         self._t0 = time.time()
         self.procs = []
         self.resultados = [None] * len(variantes)
+        self.saidas = [""] * len(variantes)
         for i, t in enumerate(variantes):
             fonte = f"{nome_base}.pov" if i == 0 else f"{nome_base}_vista{i}.pov"
             with open(os.path.join(self.trab, fonte), "w", encoding="utf-8") as f:
@@ -1165,7 +1280,11 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
             p.finished.connect(lambda rc, _s, i=i: self._um_terminou(i, rc))
             p.errorOccurred.connect(self._falhou)
             self.procs.append((p, png))
-            pov.iniciar(p, self._args(fonte, png, w, h, q, aa, self._clock()))
+            progresso = i == 0 and job != "previa"
+            if progresso:
+                p.readyRead.connect(lambda i=i: self._ler_progresso(i))
+            pov.iniciar(p, self._args(fonte, png, w, h, q, aa, self._clock(), progresso))
+        self._render_rotulo = f"{w}×{h}"
         if job != "previa":
             self.status.showMessage(tr("Renderizando {}").format(f"{w}×{h}") + (" " + tr("(4 vistas)") if quatro else "") + "…")
 
@@ -1173,9 +1292,43 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         if erro == QProcess.FailedToStart:
             self.status.showMessage(tr("Não achei o povray. Instale com: sudo apt install povray"))
 
+    RX_PROGRESSO = re.compile(r"Rendered (\d+) of (\d+) pixels(?: \(\d+%\))?\s*")
+
+    def _ler_progresso(self, i):
+        """Lê a saída do POV-Ray enquanto renderiza e atualiza a barra de progresso."""
+        if i >= len(self.procs):
+            return
+        p, _ = self.procs[i]
+        novo = bytes(p.readAll()).decode(errors="replace")
+        self.saidas[i] += novo
+        achados = self.RX_PROGRESSO.findall(novo)
+        if not achados:
+            return
+        feito, total = (int(x) for x in achados[-1])
+        f = feito / max(1, total)
+        passado = time.time() - self._t0
+        if passado < 0.5 or f <= 0:
+            return
+        self.pb_render.setValue(int(f * 100))
+        self.pb_render.show()
+        self.bt_cancelar.show()
+        falta = passado * (1 - f) / f
+        self.status.showMessage(tr("Renderizando {}").format(self._render_rotulo) + f"… {f:.0%}  "
+                                + tr("(faltam ~{} s)").format(max(1, round(falta))))
+
+    def _esconder_progresso(self):
+        self.pb_render.hide()
+        self.bt_cancelar.hide()
+
+    def cancelar_render(self):
+        if self._rodando() and self.job != "previa":
+            self._parar()
+            self.status.showMessage(tr("Render cancelado"), 4000)
+
     def _um_terminou(self, i, rc):
         p, png = self.procs[i]
-        saida = bytes(p.readAll()).decode(errors="replace")
+        saida = self.saidas[i] + bytes(p.readAll()).decode(errors="replace")
+        saida = self.RX_PROGRESSO.sub("", saida)
         pix = None
         if rc == 0:
             from PyQt5.QtGui import QPixmap
@@ -1187,6 +1340,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
             self._terminou_tudo()
 
     def _terminou_tudo(self):
+        self._esconder_progresso()
         ms = int((time.time() - self._t0) * 1000)
         job = self.job
         resultados = self.resultados

@@ -20,6 +20,9 @@ jobs:
             python3-opengl libgl1-mesa-dri libegl1 \
             fakeroot dpkg-dev fonts-dejavu-core
 
+      - name: Ruff
+        run: pipx run ruff check .
+
       - name: Testes
         env:
           QT_QPA_PLATFORM: offscreen

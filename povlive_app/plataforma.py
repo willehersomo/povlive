@@ -105,8 +105,16 @@ def pasta_dados():
 
 
 def fonte_mono(tamanho=None):
-    from PyQt5.QtGui import QFontDatabase
-    f = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+    """Fonte de largura fixa: a do sistema, se for mesmo de largura fixa; senão, uma conhecida."""
+    from PyQt5.QtGui import QFont, QFontDatabase, QFontInfo
+    candidatas = [QFontDatabase.systemFont(QFontDatabase.FixedFont)]
+    nomes = ["Consolas", "Cascadia Mono", "Courier New"] if WINDOWS else ["DejaVu Sans Mono", "Liberation Mono",
+                                                                          "Monospace"]
+    for nome in nomes:
+        f = QFont(nome)
+        f.setStyleHint(QFont.TypeWriter)
+        candidatas.append(f)
+    escolhida = next((f for f in candidatas if QFontInfo(f).fixedPitch()), candidatas[-1])
     if tamanho:
-        f.setPointSize(tamanho)
-    return f
+        escolhida.setPointSize(tamanho)
+    return escolhida

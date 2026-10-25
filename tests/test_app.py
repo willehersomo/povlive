@@ -177,3 +177,20 @@ def test_historico_fica_salvo_entre_sessoes(janela, qapp, tmp_path):
     j.close()
     j2 = janela(arq)
     assert j2.historico.count() >= 1
+
+
+def test_progresso_e_cancelar_render_grande(janela, qapp, tmp_path):
+    import shutil
+    from conftest import RAIZ
+    shutil.copy(os.path.join(RAIZ, "docs", "vitrine.pov"), tmp_path / "v.pov")
+    j = janela(str(tmp_path / "v.pov"))
+    assert esperar(qapp, lambda: ok(j), 60)
+    j.pedir_render(grande=True)
+    assert esperar(qapp, lambda: j.pb_render.isVisible() and j.pb_render.value() > 0, 60)
+    assert "%" in j.status.currentMessage()
+    j.bt_cancelar.click()
+    assert not j._rodando() and not j.pb_render.isVisible()
+    assert j.status.currentMessage() == "Render cancelado"
+    # o próximo render normal funciona e a saída não tem as linhas de progresso
+    j.pedir_render()
+    assert esperar(qapp, lambda: ok(j), 60)

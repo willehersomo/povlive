@@ -227,6 +227,7 @@ def _cor_de_textura_pronta(trecho):
 
 
 _cache_csg = {}    # chave do bloco CSG -> (peças no sistema do bloco, sólido)
+_cache_incs = {}   # (.inc, texto, clock) -> Interpretador que já leu o .inc
 
 
 class Interpretador:
@@ -243,6 +244,9 @@ class Interpretador:
         self.iteracoes = 0
         self.pasta = pasta
         self.includes = includes or {}
+        self.externos = {}        # nome declarado num .inc local -> Interpretador daquele .inc
+        self.malhas = {}          # kw_ini -> triângulos de mesh/mesh2 já lidos
+        self.profundidade = 0     # .inc dentro de .inc
 
     # ----------------------------------------------------------------- execução
 
@@ -441,6 +445,23 @@ class Interpretador:
         else:
             return
         self.vs.update(sdl.variaveis(texto, clock=self.vs.get("clock", 0.0)))
+        if self.profundidade >= 4:
+            return
+        # objetos declarados no .inc (ex.: um modelo importado) para object { Nome }
+        chave = (caminho, hash(texto), self.vs.get("clock", 0.0))
+        sub = _cache_incs.get(chave)
+        if sub is None:
+            sub = Interpretador(texto, self.pasta, self.vs.get("clock", 0.0), self.includes)
+            sub.profundidade = self.profundidade + 1
+            try:
+                sub.executar(0, len(sub.m), [])
+            except RecursionError:
+                return
+            if len(_cache_incs) > 8:
+                _cache_incs.pop(next(iter(_cache_incs)))
+            _cache_incs[chave] = sub
+        for nome_d in list(sub.declarados) + list(sub.externos):
+            self.externos[nome_d] = sub
 
     # ----------------------------------------------------------------- blocos
 
@@ -629,6 +650,11 @@ class Interpretador:
                 pts = [v[:2] for v in vals[3:3 + n] if isinstance(v, tuple)]
                 return [Peca(prisma(y1, y2, pts), cor, topo, solido=csg.prisma(y1, y2, pts))]
             return []
+        if kw in ("mesh", "mesh2"):
+            if b.kw_ini not in self.malhas:
+                self.malhas[b.kw_ini] = self._malha(b)
+            tris = self.malhas[b.kw_ini]
+            return [Peca(tris, cor, topo)] if len(tris) else []
         if kw == "superellipsoid":
             return [Peca(ESFERA.copy(), cor, topo, solido=csg.esfera((0, 0, 0), 1.0))]
         if kw == "blob":
@@ -658,6 +684,14 @@ class Interpretador:
             if mn and mn.group(2) and mn.group(1) in self.macros:
                 tmp = []
                 self._chamar_macro(mn.group(1), b.abre + 1 + mn.end() - 1, tmp, topo, cor, b)
+                return tmp
+            if mn and mn.group(1) not in self.declarados and mn.group(1) in self.externos:
+                sub = self.externos[mn.group(1)]
+                tmp = []
+                if mn.group(1) in sub.declarados:
+                    sub._objeto(sub.declarados[mn.group(1)], tmp, topo, cor)
+                else:
+                    sub._objeto_externo(mn.group(1), tmp, topo, cor)
                 return tmp
             if mn and mn.group(1) in self.declarados:
                 d = self.declarados[mn.group(1)]
@@ -691,10 +725,42 @@ class Interpretador:
                         _ps, ini, fim = self.macros[nome]
                         novos.append(self.m[ini:fim])
                         partes.append(nome + "=" + novos[-1])
+                    elif nome in self.externos:
+                        partes.append(f"{nome}@{id(self.externos[nome])}")   # muda quando o .inc muda
                     elif nome in self.vs:
                         partes.append(f"{nome}={self.vs[nome]!r}")
             trechos = novos
         return "\x00".join(partes)
+
+    def _objeto_externo(self, nome, saida, topo, cor):
+        sub = self.externos[nome]
+        if nome in sub.declarados:
+            sub._objeto(sub.declarados[nome], saida, topo, cor)
+        elif nome in sub.externos and sub.externos[nome] is not self:
+            sub._objeto_externo(nome, saida, topo, cor)
+
+    def _malha(self, b):
+        """Triângulos (n, 3, 3) de um mesh (triangle/smooth_triangle) ou mesh2 (vertex_vectors + face_indices)."""
+        vet = lambda t: np.array(pov.RX_VETOR.findall(t), float)
+        if b.kw == "mesh2":
+            vv = next((f for f in b.filhos if f.kw == "vertex_vectors" and f.fecha), None)
+            fi = next((f for f in b.filhos if f.kw == "face_indices" and f.fecha), None)
+            if vv is None or fi is None:
+                return np.zeros((0, 3, 3))
+            V = vet(self.m[vv.abre + 1:vv.fecha])
+            F = vet(self.m[fi.abre + 1:fi.fecha]).astype(np.int64)
+            if not len(V) or not len(F) or F.min() < 0 or F.max() >= len(V):
+                return np.zeros((0, 3, 3))
+            return V[F]
+        tris = []
+        for f in b.filhos:
+            if f.kw in ("triangle", "smooth_triangle") and f.fecha:
+                v = vet(self.m[f.abre + 1:f.fecha])
+                if f.kw == "smooth_triangle" and len(v) >= 6:
+                    v = v[[0, 2, 4]]
+                if len(v) >= 3:
+                    tris.append(v[:3])
+        return np.array(tris) if tris else np.zeros((0, 3, 3))
 
     def _args_a_partir(self, p):
         vals = []

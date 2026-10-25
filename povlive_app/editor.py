@@ -89,6 +89,8 @@ class Editor(QPlainTextEdit):
     arrasteValor = pyqtSignal(str)   # novo valor enquanto arrasta um número
     arrasteFim = pyqtSignal()
     abrirInclude = pyqtSignal(str)   # Ctrl+clique num #include "x.inc"
+    irDefinicao = pyqtSignal(str)    # Ctrl+clique num nome declarado
+    pedirRenomear = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -253,6 +255,14 @@ class Editor(QPlainTextEdit):
                 return m.group(1)
         return None
 
+    def palavra_no_cursor(self):
+        c = self.textCursor()
+        texto, col = c.block().text(), c.positionInBlock()
+        for m in re.finditer(r"[A-Za-z_]\w*", texto):
+            if m.start() <= col <= m.end():
+                return m.group()
+        return None
+
     def _palavra_em(self, pos):
         c = self.cursorForPosition(pos)
         texto, col = c.block().text(), c.positionInBlock()
@@ -274,6 +284,11 @@ class Editor(QPlainTextEdit):
                 self.arraste = {"ini": ini, "len": len(txt), "valor": float(txt), "atual": float(txt),
                                 "dec": dec, "x0": ev.x(), "primeiro": True, "fino": False}
                 return
+            nome = self._palavra_em(ev.pos())
+            if nome in self.nomes:
+                self.setTextCursor(self.cursorForPosition(ev.pos()))
+                self.irDefinicao.emit(nome)
+                return
         super().mousePressEvent(ev)
 
     def mouseMoveEvent(self, ev):
@@ -293,7 +308,7 @@ class Editor(QPlainTextEdit):
         ctrl = ev.modifiers() & Qt.ControlModifier
         if ctrl and (self._numero_em(ev.pos())):
             self.viewport().setCursor(Qt.SizeHorCursor)
-        elif ctrl and self._include_em(ev.pos()):
+        elif ctrl and (self._include_em(ev.pos()) or self._palavra_em(ev.pos()) in self.nomes):
             self.viewport().setCursor(Qt.PointingHandCursor)
         else:
             self.viewport().setCursor(Qt.IBeamCursor)
@@ -391,6 +406,15 @@ class Editor(QPlainTextEdit):
         if not self.textCursor().hasSelection():
             self.setTextCursor(self.cursorForPosition(ev.pos()))
         menu = self.createStandardContextMenu()
+        nome = self.palavra_no_cursor()
+        if nome in self.nomes:
+            primeira = menu.actions()[0]
+            for texto_, sinal in ((tr("Ir para a definição de {}").format(nome) + "\tF12", self.irDefinicao),
+                                  (tr("Renomear {}…").format(nome) + "\tF2", self.pedirRenomear)):
+                acao = QAction(texto_, menu)
+                acao.triggered.connect(lambda _=False, s=sinal: s.emit(nome))
+                menu.insertAction(primeira, acao)
+            menu.insertSeparator(primeira)
         if self.rgb_no_cursor():
             primeira = menu.actions()[0]
             acao = QAction(tr("Escolher cor…"), menu)
