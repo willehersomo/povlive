@@ -7,7 +7,9 @@ import os, sys, tempfile, time
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(AQUI))
+import atexit, shutil
 os.environ["HOME"] = tempfile.mkdtemp(prefix="povlive_docs_")   # não usa as configurações do usuário
+atexit.register(shutil.rmtree, os.environ["HOME"], True)
 
 from PyQt5.QtCore import Qt, QPointF, QEvent, QRect
 from PyQt5.QtGui import QMouseEvent, QTextCursor

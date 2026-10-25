@@ -22,7 +22,7 @@ class RecursosMixin:
         self.sel = None              # {"chave", "img", "mapa", "texto"}
         self.sel_esperando = []      # funções a chamar quando a seleção ficar pronta
         self.sel_chave_pendente = None
-        self.sel_dir = tempfile.mkdtemp(prefix="povlive_sel_")
+        self._sel_tmp = None         # pasta temporária (criada quando precisar; some sozinha ao sair)
         self.mov = None              # objeto sendo arrastado na imagem
         self.lista_de_avisos = []
 
@@ -71,6 +71,12 @@ class RecursosMixin:
             v.objeto.connect(lambda fase, a, b, mods, v=v: self._objeto_mouse(v, fase, a, b, mods))
         self.sel_timer = QTimer(self, singleShot=True, interval=600)
         self.sel_timer.timeout.connect(lambda: self._sel_preparar())
+
+    @property
+    def sel_dir(self):
+        if self._sel_tmp is None:
+            self._sel_tmp = tempfile.TemporaryDirectory(prefix="povlive_sel_")
+        return self._sel_tmp.name
 
     # ================================================================ painel de matrizes
 

@@ -612,7 +612,9 @@ class Janela(RecursosMixin, QMainWindow):
         self._live_parar()
         self.cache.parar()
         self.fila.cancelar()
-        shutil.rmtree(self.sel_dir, ignore_errors=True)
+        if self._sel_tmp is not None:
+            self._sel_tmp.cleanup()
+            self._sel_tmp = None
         self._gif_cancelar()
         self._guardar()
         ev.accept()
