@@ -78,7 +78,8 @@ the scene (axes converted to POV-Ray's), and also show up in the instant preview
 Download from [Releases](https://github.com/willehersomo/povlive/releases):
 
 - **Windows**: `PovLive-3.5.0-setup.exe` (installer) or `PovLive-3.5.0-windows.zip` (portable). POV-Ray comes
-  inside, nothing else to install.
+  inside, nothing else to install. The installer is not code-signed yet, so SmartScreen may warn the first time
+  (*More info → Run anyway*).
 - **Any Linux**: `PovLive-3.5.0-x86_64.AppImage` — make it executable and run it (POV-Ray comes inside):
 
   ```bash

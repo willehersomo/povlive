@@ -74,7 +74,8 @@ convertidos para os do POV-Ray) e aparecem também na prévia instantânea.
 Baixe em [Releases](https://github.com/willehersomo/povlive/releases):
 
 - **Windows**: `PovLive-3.5.0-setup.exe` (instalador) ou `PovLive-3.5.0-windows.zip` (portátil). O POV-Ray vem
-  junto, não precisa instalar mais nada.
+  junto, não precisa instalar mais nada. O instalador ainda não tem assinatura digital, então o SmartScreen pode
+  avisar na primeira vez (*Mais informações → Executar assim mesmo*).
 - **Qualquer Linux**: `PovLive-3.5.0-x86_64.AppImage` — dê permissão de execução e rode (o POV-Ray vem junto):
 
   ```bash
