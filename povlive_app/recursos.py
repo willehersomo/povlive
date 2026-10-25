@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QRadioBu
 from . import pov, sdl, matrizes, selecao, formatador, avisos, exercicios
 from .fila import FilaRender
 from .entrega import Exportador
+from .i18n import tr
 
 
 class RecursosMixin:
@@ -31,9 +32,9 @@ class RecursosMixin:
         lay = QVBoxLayout(self.painel_mat)
         lay.setContentsMargins(4, 2, 4, 2)
         topo = QHBoxLayout()
-        topo.addWidget(QLabel("<b>Matrizes</b>"))
-        self.rb_aula = QRadioButton("Aula (coluna)")
-        self.rb_pov = QRadioButton("POV-Ray (linha)")
+        topo.addWidget(QLabel("<b>" + tr("Matrizes") + "</b>"))
+        self.rb_aula = QRadioButton(tr("Aula (coluna)"))
+        self.rb_pov = QRadioButton(tr("POV-Ray (linha)"))
         self.rb_aula.setChecked(True)
         grupo = QButtonGroup(self.painel_mat)
         grupo.addButton(self.rb_aula)
@@ -54,9 +55,9 @@ class RecursosMixin:
         self.lista_avisos.setStyleSheet("QListWidget{background:#2b2a14;color:#ffd77a;border:none}")
         self.lista_avisos.setWordWrap(True)
         self.lista_avisos.itemDoubleClicked.connect(self._aviso_clicado)
-        self.lista_avisos.setToolTip("Duplo clique: vai para a linha (e oferece a correção, quando houver)")
+        self.lista_avisos.setToolTip(tr("Duplo clique: vai para a linha (e oferece a correção, quando houver)"))
         self.lista_avisos.hide()
-        self.bt_avisos = QToolButton(text="⚠ 0 avisos")
+        self.bt_avisos = QToolButton(text="⚠ 0")
         self.bt_avisos.setAutoRaise(True)
         self.bt_avisos.setStyleSheet("color:#ffd77a")
         self.bt_avisos.clicked.connect(lambda: self.lista_avisos.setVisible(not self.lista_avisos.isVisible()))
@@ -103,7 +104,7 @@ class RecursosMixin:
             dados = matrizes.analisar(e.toPlainText(), e.textCursor().position(), self._clock())
         except Exception as ex:  # o código pode estar no meio da digitação
             dados = None
-            self.txt_mat.setHtml(f"<p style='color:#999'>Não consegui ler este trecho ({ex}).</p>")
+            self.txt_mat.setHtml("<p style='color:#999'>" + tr("Não consegui ler este trecho ({}).").format(ex) + "</p>")
             return
         barra = self.txt_mat.verticalScrollBar().value()
         self.txt_mat.setHtml(matrizes.html(dados, "aula" if self.rb_aula.isChecked() else "pov"))
@@ -117,14 +118,14 @@ class RecursosMixin:
         self.lista_de_avisos = lista
         self.lista_avisos.clear()
         for a in lista:
-            onde = f"linha {a['linha']}: " if a["linha"] else ""
-            extra = "  [duplo clique corrige]" if a["correcao"] else ""
+            onde = tr("linha {}").format(a["linha"]) + ": " if a["linha"] else ""
+            extra = "  [" + tr("duplo clique corrige") + "]" if a["correcao"] else ""
             it = QListWidgetItem(f"⚠ {onde}{a['texto']}{extra}")
             it.setToolTip(a["original"])
             it.setData(Qt.UserRole, a)
             self.lista_avisos.addItem(it)
         n = len(lista)
-        self.bt_avisos.setText(f"⚠ {n} aviso" + ("s" if n != 1 else ""))
+        self.bt_avisos.setText("⚠ " + (tr("1 aviso") if n == 1 else tr("{} avisos").format(n)))
         self.bt_avisos.setVisible(n > 0)
         if n == 0:
             self.lista_avisos.hide()
@@ -135,7 +136,7 @@ class RecursosMixin:
             self.abas.setCurrentWidget(self.cena)
             self.cena.ir_para(a["linha"])
         if a["correcao"] and self.cena:
-            r = QMessageBox.question(self, "Corrigir aviso", a["texto"] + "\n\nAplicar a correção no código?")
+            r = QMessageBox.question(self, tr("Corrigir aviso"), a["texto"] + "\n\n" + tr("Aplicar a correção no código?"))
             if r == QMessageBox.Yes:
                 self._substituir_texto(self.cena, avisos.corrigir(self.cena.toPlainText(), a["correcao"]))
 
@@ -164,7 +165,7 @@ class RecursosMixin:
         linha = e.textCursor().blockNumber()
         barra = e.verticalScrollBar().value()
         if self._substituir_texto(e, formatador.formatar(e.toPlainText())) is None:
-            self.status.showMessage("O código já está formatado", 2000)
+            self.status.showMessage(tr("O código já está formatado"), 2000)
             return
         b = e.document().findBlockByNumber(linha)
         if b.isValid():
@@ -172,7 +173,7 @@ class RecursosMixin:
             c.setPosition(b.position() + len(b.text()) - len(b.text().lstrip()))
             e.setTextCursor(c)
         e.verticalScrollBar().setValue(barra)
-        self.status.showMessage("Código formatado (Ctrl+Z desfaz)", 3000)
+        self.status.showMessage(tr("Código formatado (Ctrl+Z desfaz)"), 3000)
 
     # ================================================================ seleção pela imagem
 
@@ -223,7 +224,7 @@ class RecursosMixin:
             self.sel_chave_pendente = None
         esperando, self.sel_esperando = self.sel_esperando, []
         if not ok:
-            self.status.showMessage("Não deu para preparar a seleção (a cena tem erro?)", 3000)
+            self.status.showMessage(tr("Não deu para preparar a seleção (a cena tem erro?)"), 3000)
             return
         img = QImage(png).convertToFormat(QImage.Format_RGB32)
         try:
@@ -248,7 +249,7 @@ class RecursosMixin:
         if not self.cena:
             return
         if not (self.sel and self.sel["chave"] == self._sel_chave()):
-            self.status.showMessage("Preparando seleção…")
+            self.status.showMessage(tr("Preparando seleção…"))
         self._sel_preparar(lambda: self._selecionar(visor, nx, ny))
 
     def _selecionar(self, visor, nx, ny):
@@ -256,7 +257,7 @@ class RecursosMixin:
         b = self.sel["mapa"].get(i)
         if not b:
             self.soltar_selecao()
-            self.status.showMessage("Nada aqui (fundo)", 2000)
+            self.status.showMessage(tr("Nada aqui (fundo)"), 2000)
             return
         texto = self.sel["texto"]
         self.abas.setCurrentWidget(self.cena)
@@ -266,8 +267,8 @@ class RecursosMixin:
         self.cena.setTextCursor(c)
         self.cena.centerCursor()
         self.cena.setFocus()
-        self.status.showMessage(f"{selecao.caminho(b)} — linha {sdl.linha_de(texto, b.kw_ini)}   "
-                                "(arraste as setas para mover, o anel para girar; Esc solta)", 6000)
+        self.status.showMessage(f"{selecao.caminho(b)} — " + tr("linha {}").format(sdl.linha_de(texto, b.kw_ini))
+                                + "   " + tr("(arraste as setas para mover, o anel para girar; Esc solta)"), 6000)
         visor.set_destaque(self._mascara(i))
         QTimer.singleShot(2500, lambda: visor.set_destaque(None))
         self.giz_kw = selecao.topo(b).kw_ini      # setas de mover/girar no objeto
@@ -307,11 +308,11 @@ class RecursosMixin:
             self.mov = None
             if not (self.sel and self.sel["chave"] == self._sel_chave()):
                 self._sel_preparar()
-                self.status.showMessage("Preparando seleção… tente arrastar de novo em 1 segundo", 3000)
+                self.status.showMessage(tr("Preparando seleção… tente arrastar de novo em 1 segundo"), 3000)
                 return
             bloco = self.sel["mapa"].get(self._id_em(a, b))
             if not bloco:
-                self.status.showMessage("Nenhum objeto aqui", 2000)
+                self.status.showMessage(tr("Nenhum objeto aqui"), 2000)
                 return
             self._mover_inicio(visor, selecao.topo(bloco))
         elif fase == "mover" and self.mov:
@@ -324,7 +325,7 @@ class RecursosMixin:
             self.cena.arraste = None
             self.mov = None
             self.sel = None
-            self.status.showMessage("Objeto movido (Ctrl+Z desfaz)", 3000)
+            self.status.showMessage(tr("Objeto movido (Ctrl+Z desfaz)"), 3000)
             self.pedir_render()
 
     def _mover_inicio(self, visor, bloco):
@@ -359,13 +360,13 @@ class RecursosMixin:
         self.mov = {"a": {"ini": ini, "len": fim - ini, "primeiro": primeiro}, "base": list(base),
                     "r": r, "u": u, "k": largura_mundo / max(1.0, visor.largura_desenhada())}
         e.arraste = self.mov["a"]   # faz o editor renderizar a cada mudança, como no Ctrl+arrastar número
-        self.status.showMessage(f"Movendo {bloco.kw} da linha {sdl.linha_de(texto, bloco.kw_ini)}…")
+        self.status.showMessage(tr("Movendo {} da linha {}…").format(bloco.kw, sdl.linha_de(texto, bloco.kw_ini)))
 
     # ================================================================ exercícios
 
     def comecar_exercicio(self, id_):
         ex = exercicios.POR_ID[id_]
-        e = self._novo_editor(None, exercicios.texto_inicial(ex), f"exercício: {ex['titulo']}")
+        e = self._novo_editor(None, exercicios.texto_inicial(ex), tr("exercício: {}").format(exercicios.campo(ex, "titulo")))
         c = e.textCursor()
         c.movePosition(QTextCursor.End)
         e.setTextCursor(c)
@@ -380,8 +381,8 @@ class RecursosMixin:
             e = self.cena
             id_ = exercicios.id_no_texto(e.toPlainText())
         if not id_:
-            QMessageBox.information(self, "Verificar exercício",
-                                    "Esta aba não é um exercício.\nAbra um em Ajuda > Guia do POV-Ray > Exercícios.")
+            QMessageBox.information(self, tr("Verificar exercício"),
+                                    tr("Esta aba não é um exercício.\nAbra um em Ajuda > Guia do POV-Ray > Exercícios."))
             return
         ex = exercicios.POR_ID[id_]
         w, h = exercicios.TAMANHO
@@ -393,7 +394,7 @@ class RecursosMixin:
                   "sua": e.toPlainText()}
         faltando = [k for k in arquivos if k == "sua" or not os.path.exists(arquivos[k])]
         estado = {"n": len(faltando), "erro": None}
-        self.status.showMessage("Conferindo o exercício…")
+        self.status.showMessage(tr("Conferindo o exercício…"))
 
         def pronto(k, ok, log):
             if not ok:
@@ -406,7 +407,7 @@ class RecursosMixin:
 
     def _resultado_exercicio(self, ex, arquivos, erro):
         if erro:
-            QMessageBox.warning(self, "Verificar exercício", "A cena tem erro e não renderizou:\n\n"
+            QMessageBox.warning(self, tr("Verificar exercício"), tr("A cena tem erro e não renderizou:") + "\n\n"
                                 + "\n".join(l for l in erro.splitlines() if "rror" in l)[-600:])
             self.status.clearMessage()
             return
@@ -414,28 +415,31 @@ class RecursosMixin:
         from PIL import Image
         imgs = {k: np.array(Image.open(v).convert("RGB")) for k, v in arquivos.items()}
         nota, dif = exercicios.comparar(imgs["sua"], imgs["gabarito"], imgs["vazio"])
-        self.status.showMessage(f"Exercício {ex['titulo']}: {nota * 100:.0f}% igual ao gabarito", 6000)
+        titulo = exercicios.campo(ex, "titulo")
+        pct = f"{nota * 100:.0f}%"
+        self.status.showMessage(tr("Exercício {}: {} igual ao gabarito").format(titulo, pct), 6000)
         dlg = QDialog(self)
-        dlg.setWindowTitle(f"Exercício: {ex['titulo']}")
+        dlg.setWindowTitle(tr("Exercício: {}").format(titulo))
         g = QGridLayout(dlg)
         aprovado = nota >= exercicios.NOTA_MINIMA
         msg = QLabel(f"<h2 style='color:{'#a6e22e' if aprovado else '#ffb86c'}'>"
-                     + ("Correto! 🎉" if aprovado else f"Quase: {nota * 100:.0f}% igual ao gabarito") + "</h2>"
-                     + ("" if aprovado else f"<p>Dica: {ex['dica']}</p>"
-                        "<p>Na diferença: <span style='color:#ff6060'>vermelho</span> = sobrando na sua, "
-                        "<span style='color:#6090ff'>azul</span> = faltando, "
-                        "<span style='color:#ffd200'>amarelo</span> = diferente.</p>"))
+                     + (tr("Correto!") + " 🎉" if aprovado else tr("Quase: {} igual ao gabarito").format(pct))
+                     + "</h2>"
+                     + ("" if aprovado else "<p>" + tr("Dica: {}").format(exercicios.campo(ex, "dica")) + "</p><p>"
+                        + tr("Na diferença: <span style='color:#ff6060'>vermelho</span> = sobrando na sua, "
+                             "<span style='color:#6090ff'>azul</span> = faltando, "
+                             "<span style='color:#ffd200'>amarelo</span> = diferente.") + "</p>"))
         msg.setWordWrap(True)
         g.addWidget(msg, 0, 0, 1, 3)
         dif_img = QImage(dif.data, dif.shape[1], dif.shape[0], 3 * dif.shape[1], QImage.Format_RGB888).copy()
-        for col, (titulo, pix) in enumerate((("Sua", QPixmap(arquivos["sua"])),
-                                             ("Gabarito", QPixmap(arquivos["gabarito"])),
-                                             ("Diferença", QPixmap.fromImage(dif_img)))):
+        for col, (titulo, pix) in enumerate(((tr("Sua"), QPixmap(arquivos["sua"])),
+                                             (tr("Gabarito"), QPixmap(arquivos["gabarito"])),
+                                             (tr("Diferença"), QPixmap.fromImage(dif_img)))):
             g.addWidget(QLabel(f"<b>{titulo}</b>"), 1, col)
             lb = QLabel()
             lb.setPixmap(pix)
             g.addWidget(lb, 2, col)
-        bt = QPushButton("Fechar")
+        bt = QPushButton(tr("Fechar"))
         bt.clicked.connect(dlg.accept)
         g.addWidget(bt, 3, 2)
         dlg.show()
@@ -447,16 +451,16 @@ class RecursosMixin:
         if not self.cena:
             return
         nome = self._nome_cena()
-        base = os.path.join(self._pasta(), os.path.splitext(nome)[0] + "_entrega.zip")
-        saida, _ = QFileDialog.getSaveFileName(self, "Exportar entrega", base, "ZIP (*.zip)")
+        base = os.path.join(self._pasta(), os.path.splitext(nome)[0] + tr("_entrega") + ".zip")
+        saida, _ = QFileDialog.getSaveFileName(self, tr("Exportar entrega"), base, "ZIP (*.zip)")
         if not saida:
             return
         if not saida.lower().endswith(".zip"):
             saida += ".zip"
         conteudos = {e.caminho: e.toPlainText() for e in self._editores() if e.caminho}
         exp = self._exportador = Exportador(self, nome, self.cena.toPlainText(), self._pasta(), conteudos, saida)
-        prog = QProgressDialog("Preparando…", "Cancelar", 0, 100, self)
-        prog.setWindowTitle("Exportar entrega")
+        prog = QProgressDialog(tr("Preparando…"), tr("Cancelar"), 0, 100, self)
+        prog.setWindowTitle(tr("Exportar entrega"))
         prog.setWindowModality(Qt.WindowModal)
         prog.setMinimumDuration(0)
         prog.canceled.connect(exp.cancelar)
@@ -465,9 +469,9 @@ class RecursosMixin:
         def fim(ok, msg):
             prog.close()
             if ok:
-                self.status.showMessage(f"Entrega salva em {msg}", 6000)
-                QMessageBox.information(self, "Exportar entrega", f"Entrega salva em:\n{msg}")
+                self.status.showMessage(tr("Entrega salva em {}").format(msg), 6000)
+                QMessageBox.information(self, tr("Exportar entrega"), tr("Entrega salva em:") + "\n" + msg)
             else:
-                QMessageBox.warning(self, "Exportar entrega", msg)
+                QMessageBox.warning(self, tr("Exportar entrega"), msg)
         exp.terminou.connect(fim)
         exp.iniciar()

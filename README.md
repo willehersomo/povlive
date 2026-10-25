@@ -2,145 +2,166 @@
 
 [![CI](https://github.com/willehersomo/povlive/actions/workflows/ci.yml/badge.svg)](https://github.com/willehersomo/povlive/actions/workflows/ci.yml)
 
-**PovLive** é um editor de cenas [POV-Ray](https://www.povray.org/) para Linux, com o código de um lado e a imagem do outro,
-renderizada enquanto você digita. Foi feito para estudar Computação Gráfica: além do preview ao vivo, ele
-mostra as **matrizes das transformações**, deixa **clicar e arrastar objetos na imagem**, tem **câmera livre
-com o mouse**, **quatro vistas**, um **guia com 33 exemplos** e **exercícios corrigidos automaticamente**.
+**English** · [Português](README.pt-BR.md)
 
-![Janela principal](docs/img/janela.png)
+**PovLive** is a [POV-Ray](https://www.povray.org/) scene editor for Linux, with the code on one side and the image
+on the other, rendered as you type. It was made for learning Computer Graphics: besides the live preview, it
+shows the **transformation matrices**, lets you **click and drag objects in the image**, has a **free camera
+controlled by the mouse**, **four views**, a **guide with 33 examples** and **auto-graded exercises**.
 
-## Recursos
+The interface is available in English and Portuguese.
 
-**Preview ao vivo**
-- A cena renderiza de novo meio segundo depois que você para de digitar (primeiro uma prévia pequena, depois a completa).
-- **Ctrl + arrastar um número** no código muda o valor e a imagem acompanha.
-- Erros marcam a linha em vermelho e vêm explicados em português; avisos aparecem em amarelo, alguns com correção automática.
-- Os `.inc` abertos em abas entram no render mesmo sem salvar.
+![Main window](docs/img/en/janela.png)
 
-**Interagir com a imagem**
-- **Prévia instantânea em OpenGL**: enquanto você arrasta a câmera, um número, um objeto ou a barra do `clock`,
-  a cena é desenhada na hora (mais de 60 quadros por segundo); ao soltar, vem o render do POV-Ray.
-- **Clique num objeto** e o cursor vai para a linha dele no código; aparecem **setas X/Y/Z** para mover num eixo
-  e um **anel** para girar. O `translate`/`rotate` no código é atualizado sozinho (um Ctrl+Z desfaz).
-- **Ctrl + arrastar um objeto** move ele no plano da tela.
-- **Câmera livre (F6)**: girar, mover e aproximar com o mouse (veja [como](#como-a-câmera-livre-fica-fluida)).
-  **Shift+F6** copia a câmera escolhida para o código.
-- **Animação**: a barra do `clock` e o ▶ tocam a animação suave, com a prévia.
-- **Quatro vistas (F7)**: perspectiva, frente, topo e lado, com câmeras ortográficas.
-- Eixos X/Y/Z, comparação antes/depois, histórico de versões salvo em disco e zoom com leitura do pixel.
+## Features
 
-<p align="center"><img src="docs/img/camera_livre.gif" width="480" alt="Câmera livre girando em volta da cena"></p>
+**Live preview**
+- The scene renders again half a second after you stop typing (first a small preview, then the full image).
+- **Ctrl + drag a number** in the code to change its value and watch the image follow.
+- Errors highlight the line in red and come with a plain-language explanation; warnings show up in yellow, some
+  with an automatic fix.
+- `.inc` files open in tabs are used in the render even before you save them.
 
-![Setas de mover/girar e prévia instantânea](docs/img/setas.png)
+**Interacting with the image**
+- **Instant OpenGL preview**: while you drag the camera, a number, an object or the `clock` bar, the scene is
+  drawn right away (over 60 frames per second); when you let go, the POV-Ray render comes in.
+- **Click an object** and the cursor jumps to its line in the code; **X/Y/Z arrows** appear to move it along an
+  axis, plus a **ring** to rotate it. The `translate`/`rotate` in the code is updated for you (one Ctrl+Z undoes it).
+- **Ctrl + drag an object** moves it in the screen plane.
+- **Free camera (F6)**: orbit, pan and zoom with the mouse (see [how](#how-the-free-camera-stays-smooth)).
+  **Shift+F6** copies the chosen camera into the code.
+- **Animation**: the `clock` bar and the ▶ button play the animation smoothly, using the preview.
+- **Four views (F7)**: perspective, front, top and side, with orthographic cameras.
+- X/Y/Z axes, before/after comparison, version history saved to disk and zoom with a pixel color readout.
 
-**Estudo**
-- **Painel de matrizes (F9)**: as transformações do objeto sob o cursor como matrizes 4×4, passo a passo, na convenção
-  da aula (ponto em coluna, `M = Mₙ···M₁`, `M_r` horária) ou na do POV-Ray (ponto em linha). As contas são conferidas
-  contra o `vtransform` do próprio POV-Ray nos testes.
-- **Guia (F1)** com 12 tópicos — sólidos, transformações, ordem das transformações, CSG, laços, texturas, animação —
-  e 33 exemplos que abrem numa aba com um clique.
-- **Exercícios** com gabarito: o app renderiza a sua resposta e o gabarito, compara as imagens e mostra a diferença.
+<p align="center"><img src="docs/img/en/camera_livre.gif" width="480" alt="Free camera orbiting the scene"></p>
 
-| Quatro vistas | Matrizes | Exercício |
+![Move/rotate arrows and instant preview](docs/img/en/setas.png)
+
+**Learning**
+- **Matrix panel (F9)**: the transformations of the object under the cursor as 4×4 matrices, step by step, in
+  the column-vector convention (`M = Mₙ···M₁`, as in most textbooks) or in POV-Ray's row-vector convention. The
+  math is checked against POV-Ray's own `vtransform` in the tests.
+- **Guide (F1)** with 12 topics — solids, transformations, order of transformations, CSG, loops, textures,
+  animation — and 33 examples that open in a tab with one click.
+- **Exercises** with answer keys: the app renders your answer and the answer key, compares the images and shows
+  the difference.
+
+| Four views | Matrices | Exercise |
 |---|---|---|
-| ![](docs/img/quatro_vistas.png) | ![](docs/img/matrizes.png) | ![](docs/img/exercicio.png) |
+| ![](docs/img/en/quatro_vistas.png) | ![](docs/img/en/matrizes.png) | ![](docs/img/en/exercicio.png) |
 
-**Editor**: destaque de sintaxe, autocompletar (inclusive nomes dos `#include`), ajuda ao passar o mouse, fechamento
-automático de `{ ( [ < "`, par de chaves destacado, comentar com Ctrl+/, buscar e substituir, formatar (Ctrl+Shift+F),
-seletor de cor ao vivo, modelos prontos (menu Inserir) e abas.
+**Editor**: syntax highlighting, autocomplete (including names from `#include` files), help on hover, automatic
+closing of `{ ( [ < "`, matching brace highlight, comment with Ctrl+/, find and replace, format (Ctrl+Shift+F),
+live color picker, ready-made templates (Insert menu) and tabs.
 
-**Saída**: PNG, GIF da animação (variável `clock`) e **exportar entrega** — um `.zip` com a cena, os `.inc`, a imagem
-em alta, o GIF e um LEIAME com o comando para renderizar.
+**Output**: PNG, animated GIF (using the `clock` variable) and **export submission** — a `.zip` with the scene,
+the `.inc` files, a high-resolution image, the GIF and a README with the command to render it.
 
-## Instalar
+## Install
 
-**Pacote .deb** (Ubuntu, Debian, Pop!_OS, Mint) — baixe em [Releases](https://github.com/willehersomo/povlive/releases):
+**.deb package** (Ubuntu, Debian, Pop!_OS, Mint) — download it from
+[Releases](https://github.com/willehersomo/povlive/releases):
 
 ```bash
-sudo apt install ./povlive_3.1.0_all.deb    # instala também povray, PyQt5 e Pillow
-povlive cena.pov
+sudo apt install ./povlive_3.2.0_all.deb    # also installs povray, PyQt5 and Pillow
+povlive scene.pov
 ```
 
-**Direto do código**:
+**From source**:
 
 ```bash
 sudo apt install povray povray-includes python3-pyqt5 python3-pil python3-numpy python3-opengl
 git clone https://github.com/willehersomo/povlive.git
-python3 povlive/povlive.py cena.pov
+python3 povlive/povlive.py scene.pov
 ```
 
-Funciona offline. **F1** abre o guia e **Shift+F1** a lista de atalhos.
+It works offline. **F1** opens the guide and **Shift+F1** the list of shortcuts.
 
-## Como funciona
+**Language**: the interface follows the system language (Portuguese or English). To change it, use
+**Help > Idioma / Language** and reopen the app, or start it with `POVLIVE_LANG=en` / `POVLIVE_LANG=pt`.
 
-O app chama o próprio `povray` para renderizar; o resultado é idêntico ao da linha de comando. Algumas partes
-interessantes:
+## How it works
 
-### Como a câmera livre fica fluida
-Medindo, todo render do POV-Ray 3.7 leva ~0,75 s **mesmo para uma cena vazia em 160×120** — é um custo fixo de
-inicialização. Diminuir a imagem não ajuda. Por isso, durante qualquer arraste o app usa uma **prévia em OpenGL**:
-um interpretador próprio executa o básico da linguagem (`#declare`, `#for`, `#while`, `#if`, `#macro`) e transforma
-os objetos em triângulos (esferas, caixas, cilindros, cones, toros, planos, prismas, lathe, blob, CSG), com as
-mesmas matrizes do painel de matrizes. Interpretar leva ~5 ms e desenhar ~9 ms. Nos testes, a silhueta da prévia
-coincide com a do POV-Ray (IoU > 0,93). É uma aproximação: sem sombras nem texturas detalhadas, e `difference`/
-`intersection` mostram só a primeira peça.
+The app runs `povray` itself to render, so the result is identical to the command line. Some interesting parts:
 
-Sem OpenGL, o app usa um plano B: com a câmera livre ligada e o mouse parado, ele pré-renderiza
-a cena em 36 ângulos × 7 alturas (252 imagens) usando o modo de animação do POV-Ray: 12 processos em prioridade baixa,
-cada um com uma faixa de quadros (`+SF`/`+EF`), e a cena calcula a câmera de cada quadro a partir de `frame_number`.
-A ordem dos quadros é intercalada para os ângulos mais próximos da vista atual ficarem prontos primeiro.
-Ao arrastar, aparece o quadro mais próximo, e até 4 renders da posição exata rodam em paralelo.
-No zoom e no mover, a imagem atual é deformada na hora até o render exato chegar.
+### How the free camera stays smooth
+Measured: every POV-Ray 3.7 render takes ~0.75 s **even for an empty scene at 160×120**; it is a fixed startup
+cost, so making the image smaller does not help. That is why, during any drag, the app uses an **OpenGL
+preview**: its own interpreter runs the basics of the language (`#declare`, `#for`, `#while`, `#if`, `#macro`)
+and turns the objects into triangles (spheres, boxes, cylinders, cones, tori, planes, prisms, lathe, blob, CSG),
+using the same matrices as the matrix panel. Interpreting takes ~5 ms and drawing ~9 ms. In the tests, the
+silhouette of the preview matches POV-Ray's (IoU > 0.93). It is an approximation: no shadows or detailed
+textures, and `difference`/`intersection` only show the first piece.
 
-| | só renders | cache (plano B) | prévia OpenGL |
+Without OpenGL, the app has a plan B: with the free camera on and the mouse still, it pre-renders the scene at
+36 angles × 7 heights (252 images) using POV-Ray's animation mode: 12 low-priority processes, each with a range of
+frames (`+SF`/`+EF`), and the scene computes each frame's camera from `frame_number`. The frame order is
+interleaved so that the angles closest to the current view are ready first. While dragging, the closest frame
+is shown and up to 4 renders of the exact position run in parallel. When zooming and panning, the current image
+is warped right away until the exact render arrives.
+
+| | renders only | cache (plan B) | OpenGL preview |
 |---|---|---|---|
-| primeira resposta ao arrastar | 0,8 s | 0,02 s | 0,01 s |
-| imagens novas por segundo | 4 | 12,5 | > 60 |
-| atraso em relação ao mouse | > 100° | 2,5° (passos de 10°) | nenhum |
+| first response when dragging | 0.8 s | 0.02 s | 0.01 s |
+| new images per second | 4 | 12.5 | > 60 |
+| lag behind the mouse | > 100° | 2.5° (10° steps) | none |
 
-### Como o clique acha o objeto
-O app renderiza (em segundo plano) uma cópia da cena em que cada objeto ganha uma cor única e chapada:
-as aparências originais são apagadas, e cada bloco recebe `texture { pigment { rgb <id> } finish { emission 1 ... } }`,
-com `File_Gamma=1.0`, `ambient_light 0` e sem antialiasing, para a cor no PNG ser exata. A cor do pixel clicado diz
-qual bloco do código o gerou. Objetos dentro de `#declare` não são marcados, para cada `object { Nome }` ter a
-própria cor.
+### How a click finds the object
+The app renders (in the background) a copy of the scene where each object gets a unique flat color: the
+original appearance is removed and each block gets
+`texture { pigment { rgb <id> } finish { emission 1 ... } }`, with `File_Gamma=1.0`, `ambient_light 0` and no
+antialiasing, so the color in the PNG is exact. The color of the clicked pixel tells which block of code made
+it. Objects inside `#declare` are not marked, so that each `object { Name }` gets its own color.
 
-### Estrutura
+### Translation
+Texts stay in Portuguese in the code and go through `tr()`; the English version lives in
+`povlive_app/traducoes_en.py`, and the guide and exercises have parallel English versions. A test scans the
+code for every marked text and fails if any is missing a translation, and another one opens the window in
+English and fails if any Portuguese text shows up.
+
+### Structure
 
 ```
-povlive.py              lançador
+povlive.py              launcher
 povlive_app/
-  janela.py             janela principal, abas e motor de render (prévia → final, 4 vistas)
-  recursos.py           matrizes, avisos, seleção/arraste na imagem, exercícios, entrega
-  editor.py             editor de código (sintaxe, pares, autocompletar, busca)
-  visor.py              visor de imagem (zoom, câmera livre, destaque, setas), 4 vistas, histórico
-  previa3d.py           prévia instantânea: interpretador da cena + desenho em OpenGL
-  interacao.py          prévia durante os arrastes, setas de mover/girar, animação suave
-  cache_orbita.py       cache de órbita da câmera livre
-  sdl.py                leitura do código POV-Ray: blocos, expressões, transformações
-  matrizes.py           matrizes 4×4 nas duas convenções
-  selecao.py            cores únicas por objeto (clique/arraste)
-  pov.py, guia.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
-tests/                  testes (pytest, Qt sem janela)
-empacotamento/          script do .deb, ícone e atalho
-docs/                   prints e o script que gera eles
-extras/povlive_web.py   primeira versão (editor no navegador)
+  janela.py             main window, tabs and render engine (preview → final, 4 views)
+  recursos.py           matrices, warnings, selection/dragging in the image, exercises, export
+  editor.py             code editor (syntax, pairs, autocomplete, search)
+  visor.py              image viewer (zoom, free camera, highlight, arrows), 4 views, history
+  previa3d.py           instant preview: scene interpreter + OpenGL drawing
+  interacao.py          preview while dragging, move/rotate arrows, smooth animation
+  cache_orbita.py       orbit cache for the free camera
+  sdl.py                reading POV-Ray code: blocks, expressions, transformations
+  matrizes.py           4×4 matrices in both conventions
+  selecao.py            unique colors per object (click/drag)
+  i18n.py, traducoes_en.py  interface language
+  pov.py, guia.py, guia_en.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
+tests/                  tests (pytest, headless Qt)
+empacotamento/          .deb script, icon and desktop entry
+docs/                   screenshots and the script that generates them
+extras/povlive_web.py   first version (editor in the browser)
 ```
 
-## Testes
+The code is written in Portuguese (it started as a study project for a Brazilian CG course); the interface,
+this README and the guide are available in English.
+
+## Tests
 
 ```bash
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 93 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
-tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia (nenhum pode dar erro ou aviso), os 7
-exercícios (o gabarito passa e o código inicial não) e testes de integração que abrem o app, digitam, clicam e
-arrastam na imagem, exportam a entrega e conferem o histórico, além da prévia em OpenGL (a silhueta tem que coincidir com a do POV-Ray). O CI roda tudo em cada push e gera o `.deb`;
-numa tag `v*`, o `.deb` é publicado em Releases.
+There are 140 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
+formatting must be identical), selection by color, warnings, the 33 guide examples in both languages (none may
+produce an error or warning), the 7 exercises (the answer key passes and the starting code does not), the
+translation, integration tests that open the app, type, click and drag on the image, export a submission and
+check the history, and the OpenGL preview (its silhouette must match POV-Ray's). CI runs everything on every
+push and builds the `.deb`; on a `v*` tag, the `.deb` is published in Releases.
 
-Para regerar os prints: `python3 docs/gerar_imagens.py`.
+To regenerate the screenshots: `POVLIVE_LANG=en python3 docs/gerar_imagens.py` (English, `docs/img/en`) and
+`POVLIVE_LANG=pt python3 docs/gerar_imagens.py` (Portuguese, `docs/img`).
 
-## Licença
+## License
 
-MIT — veja [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

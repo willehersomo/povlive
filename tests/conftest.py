@@ -18,7 +18,11 @@ def home_temporario(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "home" / ".config"))
     (tmp_path / "home").mkdir()
+    monkeypatch.delenv("POVLIVE_LANG", raising=False)
+    from povlive_app import i18n
+    i18n.definir("pt")       # os testes rodam em português, salvo quando pedem outro idioma
     yield
+    i18n.definir("pt")
 
 
 @pytest.fixture(scope="session")

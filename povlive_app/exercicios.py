@@ -1,11 +1,9 @@
 """Exercícios do guia: enunciado, código inicial, gabarito e correção automática por imagem."""
 import hashlib, os, re
 
-CABECALHO = """// ===== EXERCÍCIO {id}: {titulo} =====
-// {enunciado_linha}
-// Não mude a câmera nem as luzes: escreva sua resposta embaixo.
-// Para conferir: Ajuda > Verificar exercício (Ctrl+Shift+V).
-#version 3.7;
+from .i18n import idioma
+
+CENARIO = """#version 3.7;
 global_settings {{ assumed_gamma 1.0 }}
 #include "colors.inc"
 
@@ -14,8 +12,22 @@ light_source {{ <4, 8, -6> rgb 1 }}
 light_source {{ <-6, 5, -3> rgb 0.3 shadowless }}
 background {{ rgb <0.55, 0.7, 0.9> }}
 plane {{ y, 0 pigment {{ checker rgb 0.85, rgb 0.6 }} }}
+"""
 
+CABECALHO = """// ===== EXERCÍCIO {id}: {titulo} =====
+// {enunciado_linha}
+// Não mude a câmera nem as luzes: escreva sua resposta embaixo.
+// Para conferir: Ajuda > Verificar exercício (Ctrl+Shift+V).
+""" + CENARIO + """
 // ---------- sua resposta ----------
+"""
+
+CABECALHO_EN = """// ===== EXERCISE {id}: {titulo} =====
+// {enunciado_linha}
+// Do not change the camera or the lights: write your answer below.
+// To check it: Help > Check exercise (Ctrl+Shift+V).
+""" + CENARIO + """
+// ---------- your answer ----------
 """
 
 EXERCICIOS = [
@@ -105,20 +117,72 @@ object { C pigment { color Red } translate <2, 0, 0> rotate <0, 45, 0> }
 """},
 ]
 POR_ID = {e["id"]: e for e in EXERCICIOS}
-RX_ID = re.compile(r"EXERCÍCIO (\w+):")
+RX_ID = re.compile(r"(?:EXERCÍCIO|EXERCISE) (\w+):")
+
+EN = {
+    "boneco": {"titulo": "Snowman",
+               "enunciado": "Stack three white spheres: the base with center <0, 0.8, 0> and radius 0.8; the "
+                            "middle with center <0, 2, 0> and radius 0.55; the head with center <0, 2.85, 0> and "
+                            "radius 0.35. Add a nose: an orange cone (Orange) that starts at <0, 2.85, -0.3> "
+                            "with radius 0.08 and ends in a point at <0, 2.85, -0.75>.",
+               "dica": "cone { <base>, base_radius, <tip>, 0 }. The base is already done.",
+               "inicio": "sphere { <0, 0.8, 0>, 0.8 pigment { color White } }  // base\n"},
+    "mesa": {"titulo": "Table",
+             "enunciado": "The tabletop is already done. Make the four legs: brown cylinders (Brown) with radius "
+                          "0.1, from the floor (y = 0) up to the top (y = 1.2), at x = ±1.3 and z = ±0.8.",
+             "dica": "cylinder { <x, 0, z>, <x, 1.2, z>, 0.1 }. You can use #for, but four lines also work.",
+             "inicio": "box { <-1.5, 1.2, -1>, <1.5, 1.4, 1> pigment { color Brown } }  // tabletop\n"},
+    "porta": {"titulo": "Door on its hinge",
+              "enunciado": "The door is closed, with the hinge on its right edge (x = 1). Open the door by "
+                           "rotating it −60° around the y axis, but around the HINGE (the point <1, 0, 0>), "
+                           "not around the origin.",
+              "dica": "Move the hinge to the origin (translate), rotate (rotate) and move it back (translate). "
+                      "That is T(P)·R·T(−P).",
+              "inicio": "box { <-1, 0, 0>, <1, 2.5, 0.1>\n    pigment { color rgb <0.6, 0.35, 0.2> }\n"
+                        "    // write the transformations here\n}\n"},
+    "furo": {"titulo": "Cube with a hole",
+             "enunciado": "Make a red cube with side 1.6 centered at <0, 1, 0> with a cylindrical hole of "
+                          "radius 0.4 going through it from front to back (along the z axis).",
+             "dica": "difference { box {...} cylinder {...} }. Make the cylinder longer than the cube, "
+                     "otherwise a thin film is left."},
+    "anel": {"titulo": "Ring with #for",
+             "enunciado": "Make 8 golden spheres (Gold) with radius 0.3 on a circle of radius 2 around the y "
+                          "axis, with their centers at y = 0.3. The first one is at <2, 0.3, 0> and the others "
+                          "every 45°.",
+             "dica": "#for (i, 0, 7) ... #end with sphere { <2, 0.3, 0>, 0.3 ... rotate <0, i*45, 0> }"},
+    "espelho": {"titulo": "Mirroring",
+                "enunciado": "The blue L is on the right side (positive x). Make a cyan copy (Cyan) mirrored "
+                             "on the left side, reflecting it across the plane x = 0.",
+                "dica": "object { L ... scale <-1, 1, 1> }. This is the reflection matrix that flips the "
+                        "sign of x."},
+    "ordem": {"titulo": "Order of transformations",
+              "enunciado": "Use the declared box C twice: a GREEN one rotated 45° in y around its own center "
+                           "and placed at x = 2; and a RED one that first moves to x = 2 and then rotates 45° "
+                           "in y around the origin.",
+              "dica": "Order matters: rotate before translate spins in place; translate before rotate makes "
+                      "it orbit."},
+}
+
+
+def campo(e, k):
+    """Campo do exercício (titulo, enunciado, dica, inicio, gabarito) no idioma da interface."""
+    if idioma() != "pt":
+        return EN[e["id"]].get(k, e[k])
+    return e[k]
 
 
 def cabecalho(e):
-    return CABECALHO.format(id=e["id"], titulo=e["titulo"], enunciado_linha="Veja o enunciado em Ajuda > Guia > Exercícios.")
+    modelo = CABECALHO if idioma() == "pt" else CABECALHO_EN
+    return modelo.format(id=e["id"], titulo=campo(e, "titulo"), enunciado_linha="")
 
 
 def texto_inicial(e):
-    enun = "\n".join("// " + l for l in _quebrar(e["enunciado"], 90))
-    return cabecalho(e).replace("// Veja o enunciado em Ajuda > Guia > Exercícios.", enun) + e["inicio"]
+    enun = "\n".join("// " + l for l in _quebrar(campo(e, "enunciado"), 90))
+    return cabecalho(e).replace("// \n", enun + "\n", 1) + campo(e, "inicio")
 
 
 def texto_gabarito(e):
-    return cabecalho(e) + e["gabarito"]
+    return cabecalho(e) + campo(e, "gabarito")
 
 
 def texto_vazio(e):

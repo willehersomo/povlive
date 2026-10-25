@@ -6,6 +6,7 @@ from PyQt5.QtCore import QSize, QTimer, Qt
 from PyQt5.QtGui import QPixmap
 
 from . import pov, sdl, matrizes, selecao, previa3d
+from .i18n import tr
 
 PASSO_ROTACAO = 0.6   # graus por pixel ao arrastar o anel
 
@@ -34,7 +35,7 @@ class InteracaoMixin:
             self.r3d_testado = True
             self.r3d = previa3d.Renderizador()
             if not self.r3d.disponivel:
-                self.status.showMessage("OpenGL indisponível: a prévia instantânea fica desligada", 5000)
+                self.status.showMessage(tr("OpenGL indisponível: a prévia instantânea fica desligada"), 5000)
         return self.r3d if self.r3d and self.r3d.disponivel else None
 
     def _cena3d(self):
@@ -186,8 +187,8 @@ class InteracaoMixin:
             self.giz = {"alca": alca, "a": {"ini": ini, "len": fim - ini, "primeiro": not inseriu},
                         "base": list(base), "tela": vetor_tela, "L": g["L"]}
             e.arraste = self.giz["a"]
-            self.status.showMessage("Arrastando a seta " + alca.upper() if alca != "anel" else
-                                    "Girando em torno de y (Shift: de 15° em 15°)")
+            self.status.showMessage(tr("Arrastando a seta {}").format(alca.upper()) if alca != "anel" else
+                                    tr("Girando em torno de y (Shift: de 15° em 15°)"))
         elif fase == "mover" and self.giz:
             gz = self.giz
             fino = bool(mods & int(Qt.ShiftModifier))
@@ -208,6 +209,6 @@ class InteracaoMixin:
         elif fase == "fim" and self.giz:
             self.giz = None
             e.arraste = None
-            self.status.showMessage("Pronto (Ctrl+Z desfaz)", 3000)
+            self.status.showMessage(tr("Pronto (Ctrl+Z desfaz)"), 3000)
             self.pedir_render()
             self._gizmo_atualizar()

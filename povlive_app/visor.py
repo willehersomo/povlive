@@ -5,6 +5,8 @@ from PyQt5.QtCore import Qt, QSize, QPointF, QRectF, pyqtSignal
 from PyQt5.QtGui import QColor, QPainter, QIcon, QFont, QPixmap
 from PyQt5.QtWidgets import QWidget, QGridLayout, QListWidget, QListWidgetItem, QListView
 
+from .i18n import tr
+
 
 class Visor(QWidget):
     """Mostra uma imagem. Modos:
@@ -38,7 +40,7 @@ class Visor(QWidget):
         self.alca = None       # alça do gizmo sendo arrastada
         self.setFocusPolicy(Qt.ClickFocus)
         self.warp = (1.0, 0.0, 0.0)  # (escala, dx, dy em frações da imagem): resposta imediata no zoom/mover
-        self.vazio = "Sem imagem ainda"
+        self.vazio = tr("Sem imagem ainda")
         self.setMouseTracking(True)
         self.setMinimumSize(80, 60)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
@@ -148,9 +150,9 @@ class Visor(QWidget):
         if self.titulo:
             linhas.append(self.titulo)
         if self.modo_camera:
-            linhas.append("Câmera livre: arraste = girar · botão direito = mover · roda = aproximar")
+            linhas.append(tr("Câmera livre: arraste = girar · botão direito = mover · roda = aproximar"))
         if self.movendo_objeto:
-            linhas.append("Movendo objeto (Shift = passos de 0.1)")
+            linhas.append(tr("Movendo objeto (Shift = passos de 0.1)"))
         if linhas:
             texto = "   ".join(linhas)
             larg = p.fontMetrics().horizontalAdvance(texto) + 12
@@ -158,14 +160,14 @@ class Visor(QWidget):
             p.setPen(QColor("#ddd"))
             p.drawText(10, 17, texto)
         if self.previa and self.pix:
-            t = ("prévia rápida (aproximada) — solte para o render do POV-Ray" if self.width() > 700
-                 else "prévia rápida")
+            t = (tr("prévia rápida (aproximada) — solte para o render do POV-Ray") if self.width() > 700
+                 else tr("prévia rápida"))
             larg = p.fontMetrics().horizontalAdvance(t) + 12
             p.fillRect(self.width() - larg - 4, 4, larg, 18, QColor(60, 40, 0, 190))
             p.setPen(QColor("#ffd77a"))
             p.drawText(self.width() - larg + 2, 17, t)
         if self.zoom is not None:
-            t = f"{self._escala() * 100:.0f}%  (duplo clique: ajustar)"
+            t = f"{self._escala() * 100:.0f}%  " + tr("(duplo clique: ajustar)")
             larg = p.fontMetrics().horizontalAdvance(t) + 12
             p.fillRect(self.width() - larg - 4, self.height() - 22, larg, 18, QColor(0, 0, 0, 160))
             p.setPen(QColor("#ddd"))
@@ -328,9 +330,9 @@ class QuatroVistas(QWidget):
         g = QGridLayout(self)
         g.setContentsMargins(0, 0, 0, 0)
         g.setSpacing(2)
-        self.persp = Visor("Perspectiva")
-        self.orto = [Visor("Frente (olhando para +z)", "orto"), Visor("Topo (olhando para −y)", "orto"),
-                     Visor("Lado direito (olhando para −x)", "orto")]
+        self.persp = Visor(tr("Perspectiva"))
+        self.orto = [Visor(tr("Frente (olhando para +z)"), "orto"), Visor(tr("Topo (olhando para −y)"), "orto"),
+                     Visor(tr("Lado direito (olhando para −x)"), "orto")]
         g.addWidget(self.persp, 0, 0)
         g.addWidget(self.orto[0], 0, 1)
         g.addWidget(self.orto[1], 1, 0)
@@ -358,7 +360,7 @@ class Historico(QListWidget):
         self.setMovement(QListView.Static)
         self.setFixedHeight(130)
         self.setSpacing(4)
-        self.setToolTip("Clique: comparar com a imagem atual · Duplo clique: voltar o código para esta versão")
+        self.setToolTip(tr("Clique: comparar com a imagem atual · Duplo clique: voltar o código para esta versão"))
         self.itemClicked.connect(lambda it: self.ver.emit(it.data(Qt.UserRole + 1), it.text()))
         self.itemDoubleClicked.connect(lambda it: self.restaurar.emit(it.data(Qt.UserRole)))
         self.ultimo = None

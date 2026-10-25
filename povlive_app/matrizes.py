@@ -13,6 +13,7 @@ O POV-Ray gira com a regra da mão esquerda: rotate <0,0,θ> leva o eixo x em di
 import math
 
 from . import sdl
+from .i18n import tr
 
 
 # ---------------------------------------------------------------- álgebra 4x4 (convenção coluna)
@@ -78,16 +79,16 @@ def passos_de(tipo, val, original):
     """Uma transformação do código -> lista de passos (nome, matriz coluna, explicação)."""
     if tipo == "translate":
         t = vetor3(val)
-        return [(f"T({fn(t[0])}, {fn(t[1])}, {fn(t[2])})", T(t), "translação: soma o vetor à posição")]
+        return [(f"T({fn(t[0])}, {fn(t[1])}, {fn(t[2])})", T(t), tr("translação: soma o vetor à posição"))]
     if tipo == "scale":
         s = vetor3(val)
         notas = []
         for nome, k in zip("xyz", s):
             if k < 0:
-                notas.append(f"<b>reflexão</b>: troca o sinal de {nome} (na aula: M_f{nome})")
+                notas.append(tr("<b>reflexão</b>: troca o sinal de {0} (na aula: M_f{0})").format(nome))
             if k == 0:
-                notas.append(f"<b>atenção</b>: escala 0 em {nome} achata o objeto (o POV-Ray avisa e troca por 1)")
-        expl = "escala a partir da origem" + ("; " + "; ".join(notas) if notas else "")
+                notas.append(tr("<b>atenção</b>: escala 0 em {} achata o objeto (o POV-Ray avisa e troca por 1)").format(nome))
+        expl = tr("escala a partir da origem") + ("; " + "; ".join(notas) if notas else "")
         return [(f"S({fn(s[0])}, {fn(s[1])}, {fn(s[2])})", S(s), expl)]
     if tipo == "rotate":
         a = vetor3(val)
@@ -98,13 +99,13 @@ def passos_de(tipo, val, original):
             plano, sentido = PLANO[eixo]
             aula = f"M_rah({fn(g)}°) = M_r({fn(-g)}°)" if g > 0 else f"M_r({fn(-g)}°)"
             lista.append((f"R<sub>{eixo}</sub>({fn(g)}°)", R(eixo, g),
-                          f"gira {fn(g)}° em torno de {eixo} (no plano {plano}, {sentido}); "
-                          f"na notação da aula, nesse plano: <b>{aula}</b>"))
+                          tr("gira {}° em torno de {} (no plano {}, {}); na notação da aula, nesse plano: <b>{}</b>")
+                          .format(fn(g), eixo, plano, sentido, aula)))
         if not lista:
-            lista.append(("R(0°)", ident(), "rotação nula"))
+            lista.append(("R(0°)", ident(), tr("rotação nula")))
         return lista
     if tipo == "matrix":
-        return [("matrix", M_pov(val), "matriz escrita direto (o POV-Ray lista as linhas da forma ponto-em-linha)")]
+        return [("matrix", M_pov(val), tr("matriz escrita direto (o POV-Ray lista as linhas da forma ponto-em-linha)"))]
     return []
 
 
@@ -139,12 +140,12 @@ def analisar(texto, pos, clock=0.0):
         import re
         mn = re.match(r"\s*([A-Za-z_]\w*)", m[alvo.abre + 1:])
         if mn and mn.group(1) in decl:
-            adicionar(f"dentro de #declare {mn.group(1)}", decl[mn.group(1)])
-    adicionar(f"{alvo.kw} (linha {sdl.linha_de(texto, alvo.kw_ini)})", alvo)
+            adicionar(tr("dentro de #declare {}").format(mn.group(1)), decl[mn.group(1)])
+    adicionar(f"{alvo.kw} (" + tr("linha {}").format(sdl.linha_de(texto, alvo.kw_ini)) + ")", alvo)
     p = alvo.pai
     while p is not None:
         if p.kw in sdl.OBJETOS:
-            adicionar(f"{p.kw} que contém (linha {sdl.linha_de(texto, p.kw_ini)})", p)
+            adicionar(tr("{} que contém (linha {})").format(p.kw, sdl.linha_de(texto, p.kw_ini)), p)
         p = p.pai
 
     passos, problemas = [], []
@@ -153,7 +154,7 @@ def analisar(texto, pos, clock=0.0):
             if val is None:
                 problemas.append((original, erro))
                 passos.append({"grupo": rotulo, "original": original, "nome": "?", "matriz": None,
-                               "expl": f"não dá para calcular aqui: depende de <code>{erro}</code>"})
+                               "expl": tr("não dá para calcular aqui: depende de <code>{}</code>").format(erro)})
                 continue
             for nome, mat, expl in passos_de(tipo, val, original):
                 passos.append({"grupo": rotulo, "original": original, "nome": nome, "matriz": mat, "expl": expl})
@@ -186,22 +187,23 @@ def html(dados, conv="aula"):
     estilo = ("<style>body{font-size:10pt} code{color:#e6db74} .g{color:#a6e22e;font-weight:bold}"
               " .n{color:#66d9ef;font-weight:bold} .e{color:#bbb} .aviso{color:#ffb86c}</style>")
     if not dados:
-        return estilo + ("<p class=e>Coloque o cursor dentro de um objeto (sphere, box, union, object...) "
-                         "para ver as matrizes das transformações dele.</p>")
+        return estilo + ("<p class=e>" + tr("Coloque o cursor dentro de um objeto (sphere, box, union, object...) "
+                                            "para ver as matrizes das transformações dele.") + "</p>")
     d = dados
     if conv == "aula":
-        cab = ("Convenção <b>da aula</b>: ponto em coluna <code>[x y z 1]ᵀ</code>, <code>p' = M·p</code>; "
-               "a última transformação fica à esquerda: <code>M = Mₙ···M₂·M₁</code>. "
-               "<code>M_r</code> = rotação horária, <code>M_rah</code> = anti-horária.")
+        cab = tr("Convenção <b>da aula</b>: ponto em coluna <code>[x y z 1]ᵀ</code>, <code>p' = M·p</code>; "
+                 "a última transformação fica à esquerda: <code>M = Mₙ···M₂·M₁</code>. "
+                 "<code>M_r</code> = rotação horária, <code>M_rah</code> = anti-horária.")
     else:
-        cab = ("Convenção <b>do POV-Ray</b>: ponto em linha <code>[x y z 1]</code>, <code>p' = p·M</code>; "
-               "a primeira transformação fica à esquerda: <code>M = M₁·M₂···Mₙ</code> "
-               "(é a ordem dos números da palavra-chave <code>matrix</code>).")
-    partes = [estilo, f"<p><span class=n>{d['objeto']}</span> na linha {d['linha']}"
-              + (f" (declarado como <code>{d['declarado']}</code>)" if d["declarado"] else "") + "</p>",
+        cab = tr("Convenção <b>do POV-Ray</b>: ponto em linha <code>[x y z 1]</code>, <code>p' = p·M</code>; "
+                 "a primeira transformação fica à esquerda: <code>M = M₁·M₂···Mₙ</code> "
+                 "(é a ordem dos números da palavra-chave <code>matrix</code>).")
+    partes = [estilo, f"<p><span class=n>{d['objeto']}</span> " + tr("na linha {}").format(d["linha"])
+              + (" " + tr("(declarado como <code>{}</code>)").format(d["declarado"]) if d["declarado"] else "")
+              + "</p>",
               f"<p class=e>{cab}</p>"]
     if not d["passos"]:
-        partes.append("<p class=e>Este objeto não tem transformações: a matriz é a identidade.</p>")
+        partes.append("<p class=e>" + tr("Este objeto não tem transformações: a matriz é a identidade.") + "</p>")
     grupo = None
     for i, p in enumerate(d["passos"], 1):
         if p["grupo"] != grupo:
@@ -212,18 +214,21 @@ def html(dados, conv="aula"):
     if d["total"] is not None and len(d["passos"]) > 0:
         n = len(d["passos"])
         ordem = "·".join(f"M{i}" for i in (range(n, 0, -1) if conv == "aula" else range(1, n + 1)))
-        partes.append(f"<p class=g>Matriz final M = {ordem}</p>{_mat_html(d['total'], conv)}")
+        partes.append("<p class=g>" + tr("Matriz final") + f" M = {ordem}</p>{_mat_html(d['total'], conv)}")
         o = aplicar(d["total"], (0, 0, 0))
-        partes.append(f"<p>Origem &lt;0, 0, 0&gt; vai para <code>&lt;{fn(o[0])}, {fn(o[1])}, {fn(o[2])}&gt;</code>")
+        partes.append("<p>" + tr("Origem &lt;0, 0, 0&gt; vai para {}").format(
+            f"<code>&lt;{fn(o[0])}, {fn(o[1])}, {fn(o[2])}&gt;</code>"))
         if d["ponto"]:
             q = aplicar(d["total"], d["ponto"])
             pt = d["ponto"]
-            partes.append(f"<br>Primeiro ponto do objeto <code>&lt;{fn(pt[0])}, {fn(pt[1])}, {fn(pt[2])}&gt;</code> "
-                          f"vai para <code>&lt;{fn(q[0])}, {fn(q[1])}, {fn(q[2])}&gt;</code>")
+            partes.append("<br>" + tr("Primeiro ponto do objeto {} vai para {}").format(
+                f"<code>&lt;{fn(pt[0])}, {fn(pt[1])}, {fn(pt[2])}&gt;</code>",
+                f"<code>&lt;{fn(q[0])}, {fn(q[1])}, {fn(q[2])}&gt;</code>"))
         partes.append("</p>")
     elif any(p["matriz"] is None for p in d["passos"]):
-        partes.append("<p class=aviso>A matriz final não foi calculada porque algum passo depende de valores "
-                      "que só existem quando o POV-Ray roda (por exemplo, a variável de um #for).</p>")
+        partes.append("<p class=aviso>" + tr("A matriz final não foi calculada porque algum passo depende de "
+                                             "valores que só existem quando o POV-Ray roda (por exemplo, a "
+                                             "variável de um #for).") + "</p>")
     return "".join(partes)
 
 

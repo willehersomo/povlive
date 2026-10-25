@@ -78,7 +78,8 @@ def caminho(b):
         if b.kw in sdl.OBJETOS:
             nomes.append(b.kw + (f" (#declare {b.declarado})" if b.declarado else ""))
         b = b.pai
-    return " dentro de ".join(nomes)
+    from .i18n import tr
+    return tr(" dentro de ").join(nomes)
 
 
 def translate_final(texto, b):

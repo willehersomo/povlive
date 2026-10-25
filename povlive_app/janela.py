@@ -14,49 +14,61 @@ from .visor import Visor, QuatroVistas, Historico
 from .cache_orbita import CacheOrbita, angulo_dif
 from .recursos import RecursosMixin
 from .interacao import InteracaoMixin
+from .i18n import tr, N_, IDIOMAS, idioma
+from . import i18n
 
 MAX_LIVE = 4   # renders simultâneos enquanto arrasta a câmera livre
 
-QUALIDADES = [("Rascunho (sem texturas)", 4, False), ("Normal", 9, False), ("Final + AA", 11, True)]
+QUALIDADES = [(N_("Rascunho (sem texturas)"), 4, False), (N_("Normal"), 9, False), (N_("Final + AA"), 11, True)]
 TAMANHOS = [(320, 240), (640, 480), (800, 600), (1024, 768)]
 MAX_RECENTES = 10
 
-ATALHOS = """<table cellspacing=4>
-<tr><td colspan=2><b>Edição</b></td></tr>
-<tr><td>Ctrl + arrastar num número</td><td>muda o valor (Shift junto = ajuste fino)</td></tr>
-<tr><td>Ctrl + clique num #include</td><td>abre o arquivo numa aba</td></tr>
-<tr><td>Ctrl+Espaço</td><td>autocompletar</td></tr>
-<tr><td>Ctrl+F / Ctrl+H</td><td>buscar / substituir</td></tr>
-<tr><td>Ctrl+L</td><td>ir para linha</td></tr>
-<tr><td>Ctrl+/</td><td>comentar / descomentar linhas</td></tr>
-<tr><td>Tab / Shift+Tab</td><td>indentar / desindentar seleção</td></tr>
-<tr><td>Ctrl+Shift+D</td><td>duplicar linha</td></tr>
-<tr><td>Ctrl+Shift+F</td><td>formatar (reindentar) o código</td></tr>
-<tr><td>Ctrl+Shift+C ou botão direito</td><td>escolher cor do rgb sob o cursor</td></tr>
-<tr><td>Mouse parado numa palavra</td><td>ajuda da sintaxe</td></tr>
-<tr><td colspan=2><b>Render e visualização</b></td></tr>
-<tr><td>Ctrl+Enter / Ctrl+R</td><td>renderizar agora</td></tr>
-<tr><td>F5</td><td>render grande (1280×960 com antialiasing)</td></tr>
-<tr><td>F6 / Shift+F6</td><td>câmera livre / copiar câmera para o código</td></tr>
-<tr><td>F7</td><td>quatro vistas (perspectiva, frente, topo, lado)</td></tr>
-<tr><td>F8</td><td>histórico de versões</td></tr>
-<tr><td>Ctrl+E</td><td>eixos X/Y/Z</td></tr>
-<tr><td>Ctrl+P</td><td>fixar imagem para comparar</td></tr>
-<tr><td>F9</td><td>painel de matrizes do objeto sob o cursor</td></tr>
-<tr><td>Clique na imagem</td><td>vai para a linha do objeto clicado</td></tr>
-<tr><td>Ctrl + arrastar na imagem</td><td>move o objeto (Shift = passos de 0.1)</td></tr>
-<tr><td>Setas X/Y/Z e anel do objeto clicado</td><td>movem num eixo / giram em y (Shift = passos maiores); Esc solta</td></tr>
-<tr><td>Roda / arrastar / duplo clique na imagem</td><td>zoom / mover / ajustar</td></tr>
-<tr><td>Ctrl+0 / Ctrl+1</td><td>ajustar à janela / tamanho real</td></tr>
-<tr><td colspan=2><b>Ajuda</b></td></tr>
-<tr><td>F1 / Shift+F1</td><td>guia do POV-Ray com exemplos / esta lista de atalhos</td></tr>
-<tr><td>Ctrl+Shift+V</td><td>verificar o exercício aberto</td></tr>
-<tr><td colspan=2><b>Arquivo</b></td></tr>
-<tr><td>Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S</td><td>novo / abrir / salvar / salvar como</td></tr>
-<tr><td>Ctrl+W</td><td>fechar aba</td></tr>
-<tr><td>Ctrl+Shift+E / Ctrl+G</td><td>salvar PNG / exportar GIF</td></tr>
-<tr><td>Ctrl+Shift+X</td><td>exportar entrega (.zip)</td></tr>
-</table>"""
+ATALHOS = [
+    (N_("Edição"), None),
+    (N_("Ctrl + arrastar num número"), N_("muda o valor (Shift junto = ajuste fino)")),
+    (N_("Ctrl + clique num #include"), N_("abre o arquivo numa aba")),
+    (N_("Ctrl+Espaço"), N_("autocompletar")),
+    ("Ctrl+F / Ctrl+H", N_("buscar / substituir")),
+    ("Ctrl+L", N_("ir para linha")),
+    ("Ctrl+/", N_("comentar / descomentar linhas")),
+    ("Tab / Shift+Tab", N_("indentar / desindentar seleção")),
+    ("Ctrl+Shift+D", N_("duplicar linha")),
+    ("Ctrl+Shift+F", N_("formatar (reindentar) o código")),
+    (N_("Ctrl+Shift+C ou botão direito"), N_("escolher cor do rgb sob o cursor")),
+    (N_("Mouse parado numa palavra"), N_("ajuda da sintaxe")),
+    (N_("Render e visualização"), None),
+    ("Ctrl+Enter / Ctrl+R", N_("renderizar agora")),
+    ("F5", N_("render grande (1280×960 com antialiasing)")),
+    ("F6 / Shift+F6", N_("câmera livre / copiar câmera para o código")),
+    ("F7", N_("quatro vistas (perspectiva, frente, topo, lado)")),
+    ("F8", N_("histórico de versões")),
+    ("Ctrl+E", N_("eixos X/Y/Z")),
+    ("Ctrl+P", N_("fixar imagem para comparar")),
+    ("F9", N_("painel de matrizes do objeto sob o cursor")),
+    (N_("Clique na imagem"), N_("vai para a linha do objeto clicado")),
+    (N_("Ctrl + arrastar na imagem"), N_("move o objeto (Shift = passos de 0.1)")),
+    (N_("Setas X/Y/Z e anel do objeto clicado"), N_("movem num eixo / giram em y (Shift = passos maiores); Esc solta")),
+    (N_("Roda / arrastar / duplo clique na imagem"), N_("zoom / mover / ajustar")),
+    ("Ctrl+0 / Ctrl+1", N_("ajustar à janela / tamanho real")),
+    (N_("Ajuda"), None),
+    ("F1 / Shift+F1", N_("guia do POV-Ray com exemplos / esta lista de atalhos")),
+    ("Ctrl+Shift+V", N_("verificar o exercício aberto")),
+    (N_("Arquivo"), None),
+    ("Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S", N_("novo / abrir / salvar / salvar como")),
+    ("Ctrl+W", N_("fechar aba")),
+    ("Ctrl+Shift+E / Ctrl+G", N_("salvar PNG / exportar GIF")),
+    ("Ctrl+Shift+X", N_("exportar entrega (.zip)")),
+]
+
+
+def atalhos_html():
+    linhas = []
+    for a, b in ATALHOS:
+        if b is None:
+            linhas.append(f"<tr><td colspan=2><b>{tr(a)}</b></td></tr>")
+        else:
+            linhas.append(f"<tr><td>{tr(a)}</td><td>{tr(b)}</td></tr>")
+    return "<table cellspacing=4>\n" + "\n".join(linhas) + "\n</table>"
 
 
 class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
@@ -154,7 +166,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         for v in [self.visor] + self.quatro.visores():
             v.pixel.connect(lambda t: self.lb_pixel.setText(t))
 
-        self.fixa = Visor("Fixada (antes)")
+        self.fixa = Visor(tr("Fixada (antes)"))
         self.fixa.hide()
         self.historico = Historico()
         self.historico.ver.connect(self._ver_historico)
@@ -193,121 +205,142 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
 
     def _menus(self):
         mb = self.menuBar()
-        m = mb.addMenu("&Arquivo")
-        m.addAction(self._acao("Nova cena", self.novo, QKeySequence.New))
-        m.addAction(self._acao("Abrir…", self.abrir, QKeySequence.Open))
-        self.menu_recentes = m.addMenu("Recentes")
+        m = mb.addMenu(tr("&Arquivo"))
+        m.addAction(self._acao(tr("Nova cena"), self.novo, QKeySequence.New))
+        m.addAction(self._acao(tr("Abrir…"), self.abrir, QKeySequence.Open))
+        self.menu_recentes = m.addMenu(tr("Recentes"))
         m.addSeparator()
-        m.addAction(self._acao("Salvar", self.salvar, QKeySequence.Save))
-        m.addAction(self._acao("Salvar como…", self.salvar_como, "Ctrl+Shift+S"))
-        m.addAction(self._acao("Salvar todas", self.salvar_todas))
-        m.addAction(self._acao("Fechar aba", lambda: self.fechar_aba(self.abas.currentIndex()), "Ctrl+W"))
+        m.addAction(self._acao(tr("Salvar"), self.salvar, QKeySequence.Save))
+        m.addAction(self._acao(tr("Salvar como…"), self.salvar_como, "Ctrl+Shift+S"))
+        m.addAction(self._acao(tr("Salvar todas"), self.salvar_todas))
+        m.addAction(self._acao(tr("Fechar aba"), lambda: self.fechar_aba(self.abas.currentIndex()), "Ctrl+W"))
         m.addSeparator()
-        m.addAction(self._acao("Salvar imagem PNG…", self.exportar_png, "Ctrl+Shift+E"))
-        m.addAction(self._acao("Exportar animação GIF…", self.exportar_gif, "Ctrl+G"))
-        m.addAction(self._acao("Exportar entrega (.zip)…", self.exportar_entrega, "Ctrl+Shift+X",
-                               dica="Cena, .inc, imagem em alta, GIF (se animada) e LEIAME num .zip"))
+        m.addAction(self._acao(tr("Salvar imagem PNG…"), self.exportar_png, "Ctrl+Shift+E"))
+        m.addAction(self._acao(tr("Exportar animação GIF…"), self.exportar_gif, "Ctrl+G"))
+        m.addAction(self._acao(tr("Exportar entrega (.zip)…"), self.exportar_entrega, "Ctrl+Shift+X",
+                               dica=tr("Cena, .inc, imagem em alta, GIF (se animada) e LEIAME num .zip")))
         m.addSeparator()
-        m.addAction(self._acao("Sair", self.close, QKeySequence.Quit))
+        m.addAction(self._acao(tr("Sair"), self.close, QKeySequence.Quit))
 
-        m = mb.addMenu("&Editar")
-        m.addAction(self._acao("Desfazer", lambda: self.ed().undo(), QKeySequence.Undo))
-        m.addAction(self._acao("Refazer", lambda: self.ed().redo(), QKeySequence.Redo))
+        m = mb.addMenu(tr("&Editar"))
+        m.addAction(self._acao(tr("Desfazer"), lambda: self.ed().undo(), QKeySequence.Undo))
+        m.addAction(self._acao(tr("Refazer"), lambda: self.ed().redo(), QKeySequence.Redo))
         m.addSeparator()
-        m.addAction(self._acao("Buscar…", lambda: self.busca.abrir(), QKeySequence.Find))
-        m.addAction(self._acao("Substituir…", lambda: self.busca.abrir(True), "Ctrl+H"))
-        m.addAction(self._acao("Ir para linha…", self.ir_para_linha, "Ctrl+L"))
+        m.addAction(self._acao(tr("Buscar…"), lambda: self.busca.abrir(), QKeySequence.Find))
+        m.addAction(self._acao(tr("Substituir…"), lambda: self.busca.abrir(True), "Ctrl+H"))
+        m.addAction(self._acao(tr("Ir para linha…"), self.ir_para_linha, "Ctrl+L"))
         m.addSeparator()
-        m.addAction(self._acao("Comentar/descomentar", lambda: self.ed().comentar(), "Ctrl+/"))
-        m.addAction(self._acao("Duplicar linha", lambda: self.ed().duplicar_linha(), "Ctrl+Shift+D"))
-        m.addAction(self._acao("Escolher cor do rgb sob o cursor…", self.escolher_cor, "Ctrl+Shift+C"))
-        m.addAction(self._acao("Formatar código", self.formatar_codigo, "Ctrl+Shift+F"))
+        m.addAction(self._acao(tr("Comentar/descomentar"), lambda: self.ed().comentar(), "Ctrl+/"))
+        m.addAction(self._acao(tr("Duplicar linha"), lambda: self.ed().duplicar_linha(), "Ctrl+Shift+D"))
+        m.addAction(self._acao(tr("Escolher cor do rgb sob o cursor…"), self.escolher_cor, "Ctrl+Shift+C"))
+        m.addAction(self._acao(tr("Formatar código"), self.formatar_codigo, "Ctrl+Shift+F"))
 
-        m = mb.addMenu("&Inserir")
-        for item in pov.MODELOS:
+        m = mb.addMenu(tr("&Inserir"))
+        for item in pov.modelos():
             if item is None:
                 m.addSeparator()
             else:
                 nome, trecho = item
                 m.addAction(self._acao(nome, lambda t=trecho: self.ed().inserir_modelo(t)))
 
-        m = mb.addMenu("E&xibir")
-        self.a_eixos = self._acao("Eixos X/Y/Z", lambda _: self.pedir_render(), "Ctrl+E", True,
-                                  "Mostrar eixos X (vermelho), Y (verde) e Z (azul)")
-        self.a_previa = self._acao("Prévia rápida antes do render completo", lambda _: self.pedir_render(), None, True)
-        self.a_quatro = self._acao("Quatro vistas", self.quatro_vistas, "F7", True,
-                                   "Perspectiva, frente, topo e lado (F7)")
-        self.a_livre = self._acao("Câmera livre", self.camera_livre, "F6", True,
-                                  "Girar a câmera arrastando na imagem (F6)")
-        self.a_copiar = self._acao("Copiar câmera para o código", self.copiar_camera, "Shift+F6",
-                                   dica="Grava a posição da câmera livre na câmera da cena (Shift+F6)")
-        self.a_fixar = self._acao("Fixar imagem para comparar", self.fixar, "Ctrl+P", True,
-                                  "Mostra a imagem atual em cima para comparar com as próximas (Ctrl+P)")
-        self.a_hist = self._acao("Histórico de versões", self._mostrar_historico, "F8", True,
-                                 "Miniaturas de cada render (F8)")
-        self.a_mat = self._acao("Painel de matrizes", self.mostrar_matrizes, "F9", True,
-                                "Matrizes das transformações do objeto sob o cursor (F9)")
-        self.a_previa3d = self._acao("Prévia instantânea (OpenGL) ao arrastar", lambda _: None, None, True,
-                                     "Enquanto você arrasta câmera, números, objetos ou o clock, mostra uma prévia "
-                                     "aproximada na hora; ao soltar, vem o render do POV-Ray")
+        m = mb.addMenu(tr("E&xibir"))
+        self.a_eixos = self._acao(tr("Eixos X/Y/Z"), lambda _: self.pedir_render(), "Ctrl+E", True,
+                                  tr("Mostrar eixos X (vermelho), Y (verde) e Z (azul)"))
+        self.a_previa = self._acao(tr("Prévia rápida antes do render completo"), lambda _: self.pedir_render(),
+                                   None, True)
+        self.a_quatro = self._acao(tr("Quatro vistas"), self.quatro_vistas, "F7", True,
+                                   tr("Perspectiva, frente, topo e lado (F7)"))
+        self.a_livre = self._acao(tr("Câmera livre"), self.camera_livre, "F6", True,
+                                  tr("Girar a câmera arrastando na imagem (F6)"))
+        self.a_copiar = self._acao(tr("Copiar câmera para o código"), self.copiar_camera, "Shift+F6",
+                                   dica=tr("Grava a posição da câmera livre na câmera da cena (Shift+F6)"))
+        self.a_fixar = self._acao(tr("Fixar imagem para comparar"), self.fixar, "Ctrl+P", True,
+                                  tr("Mostra a imagem atual em cima para comparar com as próximas (Ctrl+P)"))
+        self.a_hist = self._acao(tr("Histórico de versões"), self._mostrar_historico, "F8", True,
+                                 tr("Miniaturas de cada render (F8)"))
+        self.a_mat = self._acao(tr("Painel de matrizes"), self.mostrar_matrizes, "F9", True,
+                                tr("Matrizes das transformações do objeto sob o cursor (F9)"))
+        self.a_previa3d = self._acao(tr("Prévia instantânea (OpenGL) ao arrastar"), lambda _: None, None, True,
+                                     tr("Enquanto você arrasta câmera, números, objetos ou o clock, mostra uma prévia "
+                                        "aproximada na hora; ao soltar, vem o render do POV-Ray"))
         self.a_previa3d.setChecked(True)
-        for acao, curto in ((self.a_eixos, "Eixos"), (self.a_quatro, "4 vistas"), (self.a_copiar, "Copiar câmera"),
-                            (self.a_fixar, "Comparar"), (self.a_hist, "Histórico"), (self.a_mat, "Matrizes")):
+        for acao, curto in ((self.a_eixos, tr("Eixos")), (self.a_quatro, tr("4 vistas")),
+                            (self.a_copiar, tr("Copiar câmera")), (self.a_fixar, tr("Comparar")),
+                            (self.a_hist, tr("Histórico")), (self.a_mat, tr("Matrizes"))):
             acao.setIconText(curto)  # texto mais curto na barra de ferramentas
         for a in (self.a_eixos, self.a_previa, self.a_previa3d, None, self.a_quatro, self.a_livre, self.a_copiar, None,
                   self.a_fixar, self.a_hist, self.a_mat, None):
             m.addSeparator() if a is None else m.addAction(a)
-        m.addAction(self._acao("Ajustar imagem à janela", lambda: [v.ajustar() for v in self._visores()], "Ctrl+0"))
-        m.addAction(self._acao("Imagem em tamanho real", lambda: self.visor.tamanho_real(), "Ctrl+1"))
+        m.addAction(self._acao(tr("Ajustar imagem à janela"), lambda: [v.ajustar() for v in self._visores()],
+                               "Ctrl+0"))
+        m.addAction(self._acao(tr("Imagem em tamanho real"), lambda: self.visor.tamanho_real(), "Ctrl+1"))
 
-        m = mb.addMenu("Aj&uda")
-        m.addAction(self._acao("Guia do POV-Ray…", self.abrir_guia, "F1"))
-        m.addAction(self._acao("Exercícios…", lambda: self.abrir_guia(exercicios=True)))
-        m.addAction(self._acao("Verificar exercício", self.verificar_exercicio, "Ctrl+Shift+V"))
-        m.addAction(self._acao("Atalhos do app", lambda: QMessageBox.information(self, "Atalhos", ATALHOS), "Shift+F1"))
+        m = mb.addMenu(tr("Aj&uda"))
+        m.addAction(self._acao(tr("Guia do POV-Ray…"), self.abrir_guia, "F1"))
+        m.addAction(self._acao(tr("Exercícios…"), lambda: self.abrir_guia(exercicios=True)))
+        m.addAction(self._acao(tr("Verificar exercício"), self.verificar_exercicio, "Ctrl+Shift+V"))
+        m.addAction(self._acao(tr("Atalhos do app"),
+                               lambda: QMessageBox.information(self, tr("Atalhos"), atalhos_html()), "Shift+F1"))
+        m.addSeparator()
+        mi = m.addMenu("Idioma / Language")
+        for codigo, nome in IDIOMAS.items():
+            a = mi.addAction(nome)
+            a.setCheckable(True)
+            a.setChecked(codigo == idioma())
+            a.triggered.connect(lambda _, c=codigo: self.trocar_idioma(c))
+
+    def trocar_idioma(self, codigo):
+        self.cfg.setValue("idioma", codigo)
+        if codigo == idioma():
+            return
+        anterior = idioma()
+        i18n.definir(codigo)      # a mensagem já sai no idioma escolhido
+        msg = tr("Feche e abra o PovLive de novo para trocar o idioma.")
+        i18n.definir(anterior)
+        QMessageBox.information(self, "PovLive", msg)
 
     def _barras(self):
         tb = QToolBar("Render")
         tb.setMovable(False)
         self.addToolBar(tb)
-        tb.addWidget(QLabel(" Qualidade "))
+        tb.addWidget(QLabel(" " + tr("Qualidade") + " "))
         self.cb_q = QComboBox()
-        self.cb_q.addItems([q[0] for q in QUALIDADES])
+        self.cb_q.addItems([tr(q[0]) for q in QUALIDADES])
         self.cb_q.setCurrentIndex(1)
         self.cb_q.currentIndexChanged.connect(lambda _: self.pedir_render())
         tb.addWidget(self.cb_q)
-        tb.addWidget(QLabel(" Tamanho "))
+        tb.addWidget(QLabel(" " + tr("Tamanho") + " "))
         self.cb_t = QComboBox()
         self.cb_t.addItems([f"{w}×{h}" for w, h in TAMANHOS])
         self.cb_t.setCurrentIndex(1)
         self.cb_t.currentIndexChanged.connect(lambda _: self.pedir_render())
         tb.addWidget(self.cb_t)
-        self.ck_auto = QCheckBox("Ao vivo")
+        self.ck_auto = QCheckBox(tr("Ao vivo"))
         self.ck_auto.setChecked(True)
         tb.addWidget(self.ck_auto)
-        tb.addAction(self._acao("Renderizar", self.pedir_render, ["Ctrl+Return", "Ctrl+R"]))
-        tb.addAction(self._acao("Render grande", lambda: self.pedir_render(grande=True), "F5"))
+        tb.addAction(self._acao(tr("Renderizar"), self.pedir_render, ["Ctrl+Return", "Ctrl+R"]))
+        tb.addAction(self._acao(tr("Render grande"), lambda: self.pedir_render(grande=True), "F5"))
         tb.addSeparator()
         tb.addAction(self.a_eixos)
         self.sp_eixos = QDoubleSpinBox()
         self.sp_eixos.setRange(0.1, 1000)
         self.sp_eixos.setValue(3)
-        self.sp_eixos.setToolTip("Comprimento dos eixos")
+        self.sp_eixos.setToolTip(tr("Comprimento dos eixos"))
         self.sp_eixos.valueChanged.connect(lambda _: self.a_eixos.isChecked() and self.pedir_render())
         tb.addWidget(self.sp_eixos)
         tb.addSeparator()
         tb.addAction(self.a_quatro)
-        self.a_lb_escala = tb.addWidget(QLabel(" escala "))
+        self.a_lb_escala = tb.addWidget(QLabel(" " + tr("escala") + " "))
         self.sp_escala = QDoubleSpinBox()
         self.sp_escala.setRange(0.05, 10000)
         self.sp_escala.setSingleStep(0.25)
         self.sp_escala.setValue(3)
-        self.sp_escala.setToolTip("Metade da altura visível nas vistas ortográficas (roda do mouse nelas também muda)")
+        self.sp_escala.setToolTip(tr("Metade da altura visível nas vistas ortográficas (roda do mouse nelas também muda)"))
         self.sp_escala.valueChanged.connect(lambda _: self.a_quatro.isChecked() and self.pedir_render())
         self.a_sp_escala = tb.addWidget(self.sp_escala)
 
         self.addToolBarBreak()
-        tb = QToolBar("Câmera e animação")
+        tb = QToolBar(tr("Câmera e animação"))
         tb.setMovable(False)
         self.addToolBar(tb)
         tb.addAction(self.a_livre)
@@ -317,7 +350,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         tb.addAction(self.a_hist)
         tb.addAction(self.a_mat)
         tb.addSeparator()
-        self.bt_play = QToolButton(text="▶", toolTip="Tocar animação (varia o clock de 0 a 1)")
+        self.bt_play = QToolButton(text="▶", toolTip=tr("Tocar animação (varia o clock de 0 a 1)"))
         self.bt_play.clicked.connect(self.tocar)
         tb.addWidget(self.bt_play)
         tb.addWidget(QLabel(" clock "))
@@ -330,7 +363,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         self.lb_clock = QLabel(" 0.000 ")
         self.lb_clock.setFont(QFont("Monospace"))
         tb.addWidget(self.lb_clock)
-        tb.addAction(self._acao("Exportar GIF", self.exportar_gif))
+        tb.addAction(self._acao(tr("Exportar GIF"), self.exportar_gif))
         self._atualizar_barra_vistas()
 
     def _tecla_clock(self, ev):
@@ -433,7 +466,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         e.document().setModified(False)
         e.textChanged.connect(lambda e=e: self._mudou(e))
         e.modificationChanged.connect(lambda _, e=e: self._rotulo(e))
-        e.arrasteValor.connect(lambda v: self.status.showMessage(f"valor: {v}"))
+        e.arrasteValor.connect(lambda v: self.status.showMessage(tr("valor: {}").format(v)))
         e.arrasteFim.connect(self.pedir_render)
         e.abrirInclude.connect(lambda nome, e=e: self._abrir_include(e, nome))
         e.cursorPositionChanged.connect(self._mat_agendar)
@@ -447,7 +480,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         i = self.abas.indexOf(e)
         if i < 0:
             return
-        nome = os.path.basename(e.caminho) if e.caminho else (e.titulo or "sem título")
+        nome = os.path.basename(e.caminho) if e.caminho else (e.titulo or tr("sem título"))
         self.abas.setTabText(i, ("● " if e.document().isModified() else "") + nome)
         self.abas.setTabToolTip(i, e.caminho or "")
         self._titulo()
@@ -456,10 +489,10 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         e = self.ed()
         if not e:
             return
-        nome = os.path.basename(e.caminho) if e.caminho else "sem título"
+        nome = os.path.basename(e.caminho) if e.caminho else tr("sem título")
         cena = ""
         if self.cena is not None and self.cena is not e:
-            cena = f"  (renderizando {os.path.basename(self.cena.caminho or 'sem título')})"
+            cena = "  " + tr("(renderizando {})").format(os.path.basename(self.cena.caminho or tr("sem título")))
         sujo = "*" if e.document().isModified() else ""
         self.setWindowTitle(f"{sujo}{nome}{cena} — PovLive")
 
@@ -492,7 +525,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             self.abas.setCurrentWidget(e)
             return e
         if not os.path.exists(caminho):
-            QMessageBox.warning(self, "Arquivo não encontrado", caminho)
+            QMessageBox.warning(self, tr("Arquivo não encontrado"), caminho)
             return None
         texto = open(caminho, encoding="utf-8", errors="replace").read()
         # aba "sem título" vazia e intocada é substituída
@@ -513,10 +546,10 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         if c:
             self.abrir_arquivo(c)
         else:
-            self.status.showMessage(f"Não achei {nome}", 3000)
+            self.status.showMessage(tr("Não achei {}").format(nome), 3000)
 
     def novo(self):
-        modelo = pov.MODELOS[0][1]
+        modelo = pov.modelos()[0][1]
         e = self._novo_editor(None, modelo.replace("|", ""))
         c = e.textCursor()
         c.setPosition(modelo.index("|"))
@@ -534,14 +567,14 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         self.guia.activateWindow()
 
     def abrir_exemplo(self, nome, texto):
-        self._novo_editor(None, texto, f"exemplo: {nome}")
+        self._novo_editor(None, texto, tr("exemplo: {}").format(nome))
         self._aba_mudou()
         self.raise_()
         self.activateWindow()
 
     def abrir(self):
         pasta = self.ed().pasta if self.ed() else os.path.expanduser("~")
-        cs, _ = QFileDialog.getOpenFileNames(self, "Abrir", pasta, "POV-Ray (*.pov *.inc);;Todos (*)")
+        cs, _ = QFileDialog.getOpenFileNames(self, tr("Abrir"), pasta, "POV-Ray (*.pov *.inc);;" + tr("Todos") + " (*)")
         for c in cs:
             self.abrir_arquivo(c)
 
@@ -555,12 +588,12 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             f.write(e.toPlainText())
         self.vigia.addPath(e.caminho)
         e.document().setModified(False)
-        self.status.showMessage(f"Salvo: {os.path.basename(e.caminho)}", 2000)
+        self.status.showMessage(tr("Salvo: {}").format(os.path.basename(e.caminho)), 2000)
         return True
 
     def salvar_como(self, e=None):
         e = e or self.ed()
-        c, _ = QFileDialog.getSaveFileName(self, "Salvar", e.caminho or os.path.join(e.pasta, "cena.pov"),
+        c, _ = QFileDialog.getSaveFileName(self, tr("Salvar"), e.caminho or os.path.join(e.pasta, tr("cena.pov")),
                                            "POV-Ray (*.pov *.inc)")
         if not c:
             return False
@@ -586,8 +619,8 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         if not e.document().isModified():
             return True
         self.abas.setCurrentWidget(e)
-        nome = os.path.basename(e.caminho) if e.caminho else "sem título"
-        r = QMessageBox.question(self, "Alterações não salvas", f"Salvar {nome} antes de fechar?",
+        nome = os.path.basename(e.caminho) if e.caminho else tr("sem título")
+        r = QMessageBox.question(self, tr("Alterações não salvas"), tr("Salvar {} antes de fechar?").format(nome),
                                  QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
         if r == QMessageBox.Save:
             return bool(self.salvar(e))
@@ -633,24 +666,24 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
 
     def ir_para_linha(self):
         e = self.ed()
-        n, ok = QInputDialog.getInt(self, "Ir para linha", f"Linha (1–{e.blockCount()}):",
+        n, ok = QInputDialog.getInt(self, tr("Ir para linha"), tr("Linha (1–{}):").format(e.blockCount()),
                                     e.textCursor().blockNumber() + 1, 1, e.blockCount())
         if ok:
             e.ir_para(n)
 
     def escolher_cor(self):
         if not self.ed().escolher_cor():
-            self.status.showMessage("Coloque o cursor sobre um rgb <r, g, b> para escolher a cor", 3000)
+            self.status.showMessage(tr("Coloque o cursor sobre um rgb <r, g, b> para escolher a cor"), 3000)
 
     def exportar_png(self):
         if not self.ultima_pix:
             return
         base = os.path.splitext(self.cena.caminho)[0] + ".png" if self.cena and self.cena.caminho \
-            else os.path.expanduser("~/cena.png")
-        c, _ = QFileDialog.getSaveFileName(self, "Salvar imagem", base, "PNG (*.png)")
+            else os.path.join(os.path.expanduser("~"), tr("cena.png"))
+        c, _ = QFileDialog.getSaveFileName(self, tr("Salvar imagem"), base, "PNG (*.png)")
         if c:
             self.ultima_pix.save(c, "PNG")
-            self.status.showMessage(f"Imagem salva em {c}", 3000)
+            self.status.showMessage(tr("Imagem salva em {}").format(c), 3000)
 
     # ================================================================ mudanças no código e no disco
 
@@ -703,8 +736,8 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             texto = open(caminho, encoding="utf-8", errors="replace").read()
             if texto != e.toPlainText():
                 if e.document().isModified():
-                    self.status.showMessage(f"{os.path.basename(caminho)} mudou fora daqui, "
-                                            "mas você tem alterações não salvas", 5000)
+                    self.status.showMessage(tr("{} mudou fora daqui, mas você tem alterações não salvas")
+                                            .format(os.path.basename(caminho)), 5000)
                     return
                 cur = e.textCursor().position()
                 barra = e.verticalScrollBar().value()
@@ -716,9 +749,9 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
                 c.setPosition(min(cur, len(texto)))
                 e.setTextCursor(c)
                 e.verticalScrollBar().setValue(barra)
-                self.status.showMessage(f"{os.path.basename(caminho)} recarregado (alterado em outro editor)", 2500)
+                self.status.showMessage(tr("{} recarregado (alterado em outro editor)").format(os.path.basename(caminho)), 2500)
         elif caminho in self.incs:
-            self.status.showMessage(f"{os.path.basename(caminho)} mudou — renderizando", 2000)
+            self.status.showMessage(tr("{} mudou — renderizando").format(os.path.basename(caminho)), 2000)
         else:
             return
         self._atualizar_includes()
@@ -731,7 +764,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             cam = pov.ler_camera(self.cena.toPlainText())
             self.orbita = pov.Orbita(cam)
             if not cam["achou"]:
-                self.status.showMessage("Não achei location/look_at com números na câmera; começando de um ponto padrão", 5000)
+                self.status.showMessage(tr("Não achei location/look_at com números na câmera; começando de um ponto padrão"), 5000)
         else:
             self.orbita = None
             self.a_livre.setChecked(False)
@@ -746,7 +779,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
 
     def copiar_camera(self):
         if not self.orbita or not self.cena:
-            self.status.showMessage("Ligue a câmera livre (F6), ajuste a vista e então copie", 3000)
+            self.status.showMessage(tr("Ligue a câmera livre (F6), ajuste a vista e então copie"), 3000)
             return
         novo = pov.gravar_camera(self.cena.toPlainText(), self.orbita.posicao(), self.orbita.alvo)
         c = QTextCursor(self.cena.document())
@@ -754,7 +787,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         c.insertText(novo)
         self.a_livre.setChecked(False)
         self.camera_livre(False)
-        self.status.showMessage("Câmera copiada para o código (Ctrl+Z desfaz)", 4000)
+        self.status.showMessage(tr("Câmera copiada para o código (Ctrl+Z desfaz)"), 4000)
 
     def _camera_mouse(self, tipo, dx, dy):
         if tipo == "escala":
@@ -774,7 +807,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             self.orbita.zoom(dx)
             self.fim_zoom.start()    # a roda não tem "soltar": considera solto após uma pausa
         p = self.orbita.posicao()
-        self.status.showMessage(f"câmera: location {pov.fmt_vetor(p)}  look_at {pov.fmt_vetor(self.orbita.alvo)}")
+        self.status.showMessage(tr("câmera") + f": location {pov.fmt_vetor(p)}  look_at {pov.fmt_vetor(self.orbita.alvo)}")
         if self.mostrar_previa():      # prévia instantânea em OpenGL
             return
         self._mostrar_melhor()         # sem OpenGL: cache de órbita + renders em paralelo
@@ -934,7 +967,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
 
     def fixar(self, ligado):
         if ligado and self.ultima_pix:
-            self._mostrar_fixa(self.ultima_pix, "Fixada (antes)")
+            self._mostrar_fixa(self.ultima_pix, tr("Fixada (antes)"))
         else:
             self.a_fixar.setChecked(False)
             self.fixa.hide()
@@ -946,7 +979,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         self.fixa.mostrar(pix, self.visor.nominal)
         self.fixa.show()
         self.a_fixar.setChecked(True)
-        self.visor.titulo = "Atual"
+        self.visor.titulo = tr("Atual")
         self.visor.update()
         tam = self.sp_dir.sizes()
         if tam[0] < 50:
@@ -962,7 +995,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             self.sp_dir.setSizes(tam)
 
     def _ver_historico(self, pix, rotulo):
-        self._mostrar_fixa(pix, f"Versão das {rotulo}  (duplo clique na miniatura volta o código)")
+        self._mostrar_fixa(pix, tr("Versão das {}  (duplo clique na miniatura volta o código)").format(rotulo))
 
     def _restaurar_historico(self, codigo):
         if not self.cena:
@@ -971,7 +1004,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         c.select(QTextCursor.Document)
         c.insertText(codigo)
         self.abas.setCurrentWidget(self.cena)
-        self.status.showMessage("Código voltou para a versão do histórico (Ctrl+Z desfaz)", 4000)
+        self.status.showMessage(tr("Código voltou para a versão do histórico (Ctrl+Z desfaz)"), 4000)
 
     def _ir_para_erro(self):
         if self.cena and self.cena.linha_erro:
@@ -1122,11 +1155,11 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             self.procs.append((p, png))
             p.start("povray", self._args(fonte, png, w, h, q, aa, self._clock()))
         if job != "previa":
-            self.status.showMessage(f"Renderizando {w}×{h}" + (" (4 vistas)" if quatro else "") + "…")
+            self.status.showMessage(tr("Renderizando {}").format(f"{w}×{h}") + (" " + tr("(4 vistas)") if quatro else "") + "…")
 
     def _falhou(self, erro):
         if erro == QProcess.FailedToStart:
-            self.status.showMessage("Não achei o povray. Instale com: sudo apt install povray")
+            self.status.showMessage(tr("Não achei o povray. Instale com: sudo apt install povray"))
 
     def _um_terminou(self, i, rc):
         p, png = self.procs[i]
@@ -1167,7 +1200,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
                 self.live_ultimo = (pixs[0], self.job_estado)
                 self.live_mostrado = self.live_seq
             if job != "previa":
-                self.status.showMessage(f"OK em {ms} ms" + ("  (1280×960)" if job == "grande" else ""))
+                self.status.showMessage(tr("OK em {} ms").format(ms) + ("  (1280×960)" if job == "grande" else ""))
                 self.historico.adicionar(self.cena.toPlainText(), pixs[0])
         else:
             saida = next(s for pix, s in resultados if not pix)
@@ -1202,12 +1235,13 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         if m:
             arquivo, linha = m.group(1), int(m.group(2))
             if os.path.basename(arquivo) != nome:   # erro dentro de um .inc
-                dica = f"\n\nO erro está em {arquivo} (Ctrl+clique no #include para abrir)."
+                dica = "\n\n" + tr("O erro está em {} (Ctrl+clique no #include para abrir).").format(arquivo)
                 linha = None
             elif linha > self.cena.blockCount():
                 linha = self.cena.blockCount()
-                dica = ("\n\nO erro aconteceu depois do fim do seu código: provavelmente falta fechar uma chave }."
-                        " (Eixos e câmera livre são acrescentados no fim da cena, por isso podem aparecer na mensagem.)")
+                dica = "\n\n" + tr("O erro aconteceu depois do fim do seu código: provavelmente falta fechar uma "
+                                     "chave }. (Eixos e câmera livre são acrescentados no fim da cena, por isso podem "
+                                     "aparecer na mensagem.)")
         self.cena.set_erro(linha)
         from . import avisos
         explicacao = avisos.explicar_erro(saida)
@@ -1217,22 +1251,22 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         inicio = next((i for i, l in enumerate(linhas) if l.startswith("File '")),
                       next((i for i, l in enumerate(linhas) if "error" in l.lower()), max(0, len(linhas) - 8)))
         self.log.setPlainText("\n".join(linhas[inicio:]) + dica +
-                              ("\n\n(duplo clique aqui para ir até a linha do erro)" if linha else ""))
+                              ("\n\n" + tr("(duplo clique aqui para ir até a linha do erro)") if linha else ""))
         self.log.show()
-        self.status.showMessage("Erro no render" + (f" — linha {linha}" if linha else ""))
+        self.status.showMessage(tr("Erro no render") + (" — " + tr("linha {}").format(linha) if linha else ""))
 
     # ================================================================ exportar GIF
 
     def exportar_gif(self):
         if self.gif or not self.cena:
             return
-        n, ok = QInputDialog.getInt(self, "Exportar GIF",
-                                    "Quantos quadros? (o clock vai de 0 até 1;\n"
-                                    "use a variável clock na cena para animar)", 30, 2, 500)
+        n, ok = QInputDialog.getInt(self, tr("Exportar GIF"),
+                                    tr("Quantos quadros? (o clock vai de 0 até 1;\n"
+                                       "use a variável clock na cena para animar)"), 30, 2, 500)
         if not ok:
             return
-        base = os.path.splitext(self.cena.caminho)[0] + ".gif" if self.cena.caminho else os.path.expanduser("~/cena.gif")
-        saida, _ = QFileDialog.getSaveFileName(self, "Salvar GIF", base, "GIF (*.gif)")
+        base = os.path.splitext(self.cena.caminho)[0] + ".gif" if self.cena.caminho else os.path.join(os.path.expanduser("~"), tr("cena.gif"))
+        saida, _ = QFileDialog.getSaveFileName(self, tr("Salvar GIF"), base, "GIF (*.gif)")
         if not saida:
             return
         nome, q, aa = QUALIDADES[self.cb_q.currentIndex()]
@@ -1246,7 +1280,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         # animação nativa do POV-Ray: quadros 0..n-1 com clock = i/n (o último quadro emenda no primeiro)
         args = self._args(fonte, os.path.join("quadros", "q.png"), w, h, q, aa)
         args += ["+KFI0", f"+KFF{n - 1}", "+KI0", f"+KF{(n - 1) / n:.6f}"]
-        self.prog = QProgressDialog("Renderizando quadros…", "Cancelar", 0, n, self)
+        self.prog = QProgressDialog(tr("Renderizando quadros…"), tr("Cancelar"), 0, n, self)
         self.prog.setWindowModality(Qt.WindowModal)
         self.prog.setMinimumDuration(0)
         self.prog.canceled.connect(self._gif_cancelar)
@@ -1269,15 +1303,15 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         if rc != 0 or len(quadros) < g["n"]:
             erro = bytes(g["proc"].readAll()).decode(errors="replace")
             self._gif_cancelar()
-            QMessageBox.warning(self, "Erro no GIF", "O POV-Ray falhou:\n\n" + erro[-800:])
+            QMessageBox.warning(self, tr("Erro no GIF"), tr("O POV-Ray falhou:") + "\n\n" + erro[-800:])
             return
         try:
             from PIL import Image
             imgs = [Image.open(f).convert("RGB") for f in quadros]
             imgs[0].save(g["saida"], save_all=True, append_images=imgs[1:], duration=66, loop=0)
-            self.status.showMessage(f"GIF salvo em {g['saida']}", 5000)
+            self.status.showMessage(tr("GIF salvo em {}").format(g["saida"]), 5000)
         except ImportError:
-            QMessageBox.warning(self, "Falta o Pillow", "Instale com: sudo apt install python3-pil")
+            QMessageBox.warning(self, tr("Falta o Pillow"), tr("Instale com: sudo apt install python3-pil"))
         self._gif_cancelar()
 
     def _gif_cancelar(self):
@@ -1312,6 +1346,8 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("PovLive")
     app.setDesktopFileName("povlive")
+    i18n.carregar()
+    i18n.instalar_tradutor_qt(app)
     tema_escuro(app)
     j = Janela(sys.argv[1:])
     j.show()

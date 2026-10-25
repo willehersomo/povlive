@@ -26,12 +26,15 @@ Version: $VERSAO
 Architecture: all
 Maintainer: Breno Wille <brenowille23@gmail.com>
 Depends: python3 (>= 3.8), python3-pyqt5, povray, povray-includes, python3-pil, python3-numpy, python3-opengl
+Recommends: qttranslations5-l10n
 Section: graphics
 Priority: optional
-Description: PovLive - editor de cenas POV-Ray com preview em tempo real
- Código de um lado e imagem do outro, renderizada enquanto você digita.
- Câmera livre com o mouse, quatro vistas, eixos, animação com clock,
- exportação de GIF, histórico de versões e editor com autocompletar.
+Homepage: https://github.com/willehersomo/povlive
+Description: POV-Ray scene editor with live preview
+ Code on one side and the image on the other, rendered as you type.
+ Instant OpenGL preview while dragging, move/rotate arrows on objects,
+ free camera, four views, transformation matrices, a guide with 33
+ examples and auto-graded exercises. Interface in English and Portuguese.
 CTRL
 
 find "$P" -type d -exec chmod 755 {} +

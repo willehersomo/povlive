@@ -1,29 +1,31 @@
 """Avisos do POV-Ray (não impedem o render, mas costumam indicar um problema)."""
 import re
 
+from .i18n import N_, tr
+
 INICIO = re.compile(r"^(?:File '([^']*)' line (\d+): )?(Parse Warning|Possible Parse Error|Warning|Render Warning): ?(.*)$")
 
 TRADUCOES = [
     (r"assumed_gamma not specified",
-     "Falta 'global_settings { assumed_gamma 1.0 }'. No POV-Ray 3.7 isso é recomendado para as cores "
-     "ficarem corretas (as cores podem clarear um pouco ao corrigir).", "gamma"),
+     N_("Falta 'global_settings { assumed_gamma 1.0 }'. No POV-Ray 3.7 isso é recomendado para as cores "
+     "ficarem corretas (as cores podem clarear um pouco ao corrigir)."), "gamma"),
     (r"other declarations preceding the first #version",
-     "Falta '#version 3.7;' na primeira linha. Sem ele, o POV-Ray pode usar o comportamento de versões antigas.",
+     N_("Falta '#version 3.7;' na primeira linha. Sem ele, o POV-Ray pode usar o comportamento de versões antigas."),
      "versao"),
     (r"More than one camera",
-     "Há mais de uma câmera na cena: só a última vale.", None),
+     N_("Há mais de uma câmera na cena: só a última vale."), None),
     (r"Scale (\w) by 0\.0",
-     "Escala zero no eixo {0}: o POV-Ray trocou por 1. Escala 0 achataria o objeto.", None),
+     N_("Escala zero no eixo {0}: o POV-Ray trocou por 1. Escala 0 achataria o objeto."), None),
     (r"No objects in scene",
-     "A cena não tem nenhum objeto.", None),
+     N_("A cena não tem nenhum objeto."), None),
     (r"No pigment type given|No texture",
-     "Objeto sem pigment: vai aparecer preto.", None),
+     N_("Objeto sem pigment: vai aparecer preto."), None),
     (r"Camera vectors are not perpendicular",
-     "Os vetores da câmera (right, up, direction) não são perpendiculares: a imagem pode sair distorcida.", None),
+     N_("Os vetores da câmera (right, up, direction) não são perpendiculares: a imagem pode sair distorcida."), None),
     (r"Should have at least 1 light source|No light source",
-     "A cena não tem luz: tudo vai sair escuro.", None),
+     N_("A cena não tem luz: tudo vai sair escuro."), None),
     (r"Suspicious expression after rgb",
-     "Expressão estranha depois de rgb: confira se o vetor da cor tem 3 componentes.", None),
+     N_("Expressão estranha depois de rgb: confira se o vetor da cor tem 3 componentes."), None),
 ]
 
 
@@ -50,7 +52,7 @@ def ler(saida, ignorar_cameras=False):
         for rx, trad, corr in TRADUCOES:
             mm = re.search(rx, a["original"])
             if mm:
-                a["texto"] = trad
+                a["texto"] = tr(trad)
                 for k, g in enumerate(mm.groups()):   # {0}, {1}... (sem usar format: o texto tem chaves)
                     a["texto"] = a["texto"].replace("{%d}" % k, g or "")
                 a["correcao"] = corr
@@ -86,32 +88,33 @@ def corrigir(texto, tipo):
 
 ERROS = [
     (r"No matching \} in '(\w+)'",
-     "Falta fechar uma chave } do bloco {0}. O POV-Ray só percebe isso mais adiante (no próximo bloco "
-     "ou no fim do arquivo), então a chave que falta costuma estar ANTES da linha indicada."),
+     N_("Falta fechar uma chave } do bloco {0}. O POV-Ray só percebe isso mais adiante (no próximo bloco "
+     "ou no fim do arquivo), então a chave que falta costuma estar ANTES da linha indicada.")),
     (r"Undeclared identifier '(\w+)'",
-     "O nome '{0}' não existe: confira se está escrito igual (maiúsculas contam) ou se falta o #include "
-     "que o define (ex.: colors.inc para nomes de cores)."),
+     N_("O nome '{0}' não existe: confira se está escrito igual (maiúsculas contam) ou se falta o #include "
+     "que o define (ex.: colors.inc para nomes de cores).")),
     (r"Cannot open include file (\S+)",
-     "Não achei o arquivo {0}: confira o nome e se ele está na mesma pasta da cena."),
+     N_("Não achei o arquivo {0}: confira o nome e se ele está na mesma pasta da cena.")),
     (r"Expected 'numeric expression'",
-     "Faltou um número: confira vírgulas sobrando ou faltando, principalmente dentro de vetores < >."),
+     N_("Faltou um número: confira vírgulas sobrando ou faltando, principalmente dentro de vetores < >.")),
     (r"Expected '(.)', (.+?) found instead",
-     "Esperava '{0}' mas encontrou {1}: costuma ser vírgula, ponto e vírgula ou sinal de > faltando."),
+     N_("Esperava '{0}' mas encontrou {1}: costuma ser vírgula, ponto e vírgula ou sinal de > faltando.")),
     (r"Expected '(\w+)'",
-     "Esperava '{0}' aqui."),
+     N_("Esperava '{0}' aqui.")),
     (r"Float expected but vector or color",
-     "Aqui vai um número, mas foi escrito um vetor ou cor (algo entre < >)."),
+     N_("Aqui vai um número, mas foi escrito um vetor ou cor (algo entre < >).")),
     (r"No objects in scene",
-     "A cena não tem nenhum objeto para renderizar."),
+     N_("A cena não tem nenhum objeto para renderizar.")),
 ]
 
 
 def explicar_erro(saida):
-    """Explicação em português do primeiro erro reconhecido (ou None)."""
+    """Explicação (no idioma da interface) do primeiro erro reconhecido (ou None)."""
     texto = " ".join(l.strip() for l in saida.splitlines())
     for rx, exp in ERROS:
         m = re.search(rx, texto)
         if m:
+            exp = tr(exp)
             for k, g in enumerate(m.groups()):
                 exp = exp.replace("{%d}" % k, g or "")
             return exp

@@ -1,6 +1,7 @@
 """Gera os prints do README a partir do próprio app (sem janela visível).
 
-Uso:  QT_QPA_PLATFORM=offscreen python3 docs/gerar_imagens.py
+Uso:  QT_QPA_PLATFORM=offscreen python3 docs/gerar_imagens.py           (prints em português, docs/img)
+      QT_QPA_PLATFORM=offscreen POVLIVE_LANG=en python3 docs/gerar_imagens.py   (em inglês, docs/img/en)
 """
 import os, sys, tempfile, time
 
@@ -14,9 +15,11 @@ atexit.register(shutil.rmtree, os.environ["HOME"], True)
 from PyQt5.QtCore import Qt, QPointF, QEvent, QRect
 from PyQt5.QtGui import QMouseEvent, QTextCursor
 from PyQt5.QtWidgets import QApplication
-from povlive_app import janela as J, guia as G, exercicios as X
+from povlive_app import janela as J, guia as G, exercicios as X, i18n
 
-IMG = os.path.join(AQUI, "img")
+i18n.carregar()
+EN = i18n.idioma() == "en"
+IMG = os.path.join(AQUI, "img", "en") if EN else os.path.join(AQUI, "img")
 os.makedirs(IMG, exist_ok=True)
 app = QApplication([])
 J.tema_escuro(app)
@@ -48,7 +51,7 @@ def salvar(widget, nome):
     print("gerado", nome)
 
 
-j = J.Janela([os.path.join(AQUI, "vitrine.pov")])
+j = J.Janela([os.path.join(AQUI, "vitrine_en.pov" if EN else "vitrine.pov")])
 j.resize(1500, 900)
 j.show()
 j.cb_t.setCurrentIndex(2)
@@ -64,7 +67,8 @@ novo_render(j, lambda: j.abrir_exemplo("pivo", G.exemplos()["pivo"]))
 j.a_mat.trigger()
 e = j.cena
 c = e.textCursor()
-c.setPosition(e.toPlainText().index("object { Porta pigment { color Brown }") + 5)
+c.setPosition(e.toPlainText().index("object { Door pigment { color Brown }" if EN else
+                                    "object { Porta pigment { color Brown }") + 5)
 e.setTextCursor(c)
 j._mat_atualizar()
 j.txt_mat.verticalScrollBar().setValue(j.txt_mat.verticalScrollBar().maximum())

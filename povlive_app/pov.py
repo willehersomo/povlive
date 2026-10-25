@@ -1,6 +1,8 @@
 """Tudo que é específico do POV-Ray: vocabulário, includes, câmera, eixos, vistas, ajuda e modelos."""
 import glob, math, os, re
 
+from .i18n import N_, tr, idioma
+
 BIBLIOTECA = sorted(glob.glob("/usr/share/povray-3*/include"))[-1:]
 
 PALAVRAS = """camera light_source sphere box cylinder cone plane torus disc triangle smooth_triangle
@@ -288,7 +290,7 @@ AJUDA = {
 # "|" marca onde o cursor fica depois de inserir
 
 MODELOS = [
-    ("Cena básica", """#version 3.7;
+    (N_("Cena básica"), """#version 3.7;
 global_settings { assumed_gamma 1.0 }
 #include "colors.inc"
 
@@ -304,31 +306,47 @@ plane { y, 0 pigment { checker White Gray70 } }
 
 |"""),
     None,
-    ("Câmera", "camera {\n    location <0, 2, -5>\n    look_at <0, 0, 0>\n    |\n}\n"),
-    ("Câmera ortográfica", "camera {\n    orthographic\n    location <0, 0, -10>\n    look_at <0, 0, 0>\n    right x*8*image_width/image_height\n    up y*8\n}\n|"),
-    ("Luz pontual", "light_source { <5, 10, -5> rgb 1 }\n|"),
-    ("Luz de área (sombra suave)", "light_source {\n    <5, 10, -5> rgb 1\n    area_light <2, 0, 0>, <0, 0, 2>, 5, 5\n    adaptive 1 jitter\n}\n|"),
-    ("Spotlight", "light_source {\n    <0, 5, 0> rgb 1\n    spotlight\n    point_at <0, 0, 0>\n    radius 15 falloff 25\n}\n|"),
+    (N_("Câmera"), "camera {\n    location <0, 2, -5>\n    look_at <0, 0, 0>\n    |\n}\n"),
+    (N_("Câmera ortográfica"), "camera {\n    orthographic\n    location <0, 0, -10>\n    look_at <0, 0, 0>\n    right x*8*image_width/image_height\n    up y*8\n}\n|"),
+    (N_("Luz pontual"), "light_source { <5, 10, -5> rgb 1 }\n|"),
+    (N_("Luz de área (sombra suave)"), "light_source {\n    <5, 10, -5> rgb 1\n    area_light <2, 0, 0>, <0, 0, 2>, 5, 5\n    adaptive 1 jitter\n}\n|"),
+    (N_("Spotlight"), "light_source {\n    <0, 5, 0> rgb 1\n    spotlight\n    point_at <0, 0, 0>\n    radius 15 falloff 25\n}\n|"),
     None,
-    ("Esfera", "sphere {\n    <0, 1, 0>, 1\n    pigment { color Red }|\n}\n"),
-    ("Caixa", "box {\n    <-1, 0, -1>, <1, 2, 1>\n    pigment { color Blue }|\n}\n"),
-    ("Cilindro", "cylinder {\n    <0, 0, 0>, <0, 2, 0>, 0.5\n    pigment { color Green }|\n}\n"),
-    ("Cone", "cone {\n    <0, 0, 0>, 1, <0, 2, 0>, 0\n    pigment { color Yellow }|\n}\n"),
-    ("Toro", "torus {\n    1, 0.25\n    pigment { color Orange }|\n}\n"),
-    ("Plano (chão)", "plane { y, 0 pigment { checker White Gray70 } }\n|"),
-    ("Prisma", "prism {\n    linear_sweep 0, 1, 4,\n    <-1, -1>, <1, -1>, <0, 1>, <-1, -1>\n    pigment { color Cyan }|\n}\n"),
-    ("Texto 3D", 'text {\n    ttf "timrom.ttf" "Olá" 0.2, 0\n    pigment { color White }|\n}\n'),
+    (N_("Esfera"), "sphere {\n    <0, 1, 0>, 1\n    pigment { color Red }|\n}\n"),
+    (N_("Caixa"), "box {\n    <-1, 0, -1>, <1, 2, 1>\n    pigment { color Blue }|\n}\n"),
+    (N_("Cilindro"), "cylinder {\n    <0, 0, 0>, <0, 2, 0>, 0.5\n    pigment { color Green }|\n}\n"),
+    (N_("Cone"), "cone {\n    <0, 0, 0>, 1, <0, 2, 0>, 0\n    pigment { color Yellow }|\n}\n"),
+    (N_("Toro"), "torus {\n    1, 0.25\n    pigment { color Orange }|\n}\n"),
+    (N_("Plano (chão)"), "plane { y, 0 pigment { checker White Gray70 } }\n|"),
+    (N_("Prisma"), "prism {\n    linear_sweep 0, 1, 4,\n    <-1, -1>, <1, -1>, <0, 1>, <-1, -1>\n    pigment { color Cyan }|\n}\n"),
+    (N_("Texto 3D"), 'text {\n    ttf "timrom.ttf" "Olá" 0.2, 0\n    pigment { color White }|\n}\n'),
     None,
-    ("União", "union {\n    |\n}\n"),
-    ("Diferença (A − B)", "difference {\n    box { <-1, 0, -1>, <1, 2, 1> }\n    sphere { <0, 2, 0>, 1.2 }\n    pigment { color Red }|\n}\n"),
-    ("Interseção", "intersection {\n    box { <-1, -1, -1>, <1, 1, 1> }\n    sphere { <0, 0, 0>, 1.35 }\n    pigment { color Blue }|\n}\n"),
+    (N_("União"), "union {\n    |\n}\n"),
+    (N_("Diferença (A − B)"), "difference {\n    box { <-1, 0, -1>, <1, 2, 1> }\n    sphere { <0, 2, 0>, 1.2 }\n    pigment { color Red }|\n}\n"),
+    (N_("Interseção"), "intersection {\n    box { <-1, -1, -1>, <1, 1, 1> }\n    sphere { <0, 0, 0>, 1.35 }\n    pigment { color Blue }|\n}\n"),
     None,
-    ("Textura completa", "texture {\n    pigment { color rgb <0.8, 0.2, 0.2> }\n    normal { bumps 0.3 scale 0.1 }\n    finish { ambient 0.1 diffuse 0.7 phong 0.6 reflection 0.1 }\n}|"),
-    ("Vidro", "pigment { rgbf <1, 1, 1, 0.95> }\nfinish { specular 0.6 reflection 0.1 }\ninterior { ior 1.5 }|"),
-    ("Metal", "pigment { color rgb <0.8, 0.8, 0.85> }\nfinish { metallic ambient 0 diffuse 0.3 specular 0.8 roughness 0.01 reflection 0.6 }|"),
+    (N_("Textura completa"), "texture {\n    pigment { color rgb <0.8, 0.2, 0.2> }\n    normal { bumps 0.3 scale 0.1 }\n    finish { ambient 0.1 diffuse 0.7 phong 0.6 reflection 0.1 }\n}|"),
+    (N_("Vidro"), "pigment { rgbf <1, 1, 1, 0.95> }\nfinish { specular 0.6 reflection 0.1 }\ninterior { ior 1.5 }|"),
+    (N_("Metal"), "pigment { color rgb <0.8, 0.8, 0.85> }\nfinish { metallic ambient 0 diffuse 0.3 specular 0.8 roughness 0.01 reflection 0.6 }|"),
     None,
     ("#declare", "#declare Nome = |;\n"),
-    ("Laço #for", "#for (i, 0, 9)\n    sphere { <i, 0.5, 0>, 0.4 pigment { color rgb <i/9, 0.3, 1 - i/9> } }\n#end\n|"),
+    (N_("Laço #for"), "#for (i, 0, 9)\n    sphere { <i, 0.5, 0>, 0.4 pigment { color rgb <i/9, 0.3, 1 - i/9> } }\n#end\n|"),
     ("#macro", "#macro Nome(param)\n    |\n#end\n"),
-    ("Animação (gira com o clock)", "rotate <0, clock*360, 0>|"),
+    (N_("Animação (gira com o clock)"), "rotate <0, clock*360, 0>|"),
 ]
+
+
+def modelos():
+    """Modelos do menu Inserir no idioma da interface."""
+    if idioma() == "pt":
+        return MODELOS
+    from .traducoes_en import CODIGO_MODELOS
+    return [None if m is None else (tr(m[0]), CODIGO_MODELOS.get(m[0], m[1])) for m in MODELOS]
+
+
+def ajuda(palavra):
+    """Ajuda da sintaxe (ao passar o mouse) no idioma da interface, ou None."""
+    if idioma() != "pt":
+        from .traducoes_en import AJUDA as AJUDA_EN
+        return AJUDA_EN.get(palavra)
+    return AJUDA.get(palavra)

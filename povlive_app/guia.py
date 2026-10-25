@@ -13,6 +13,7 @@ from PyQt5.QtGui import QImage, QTextDocument
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QListWidget, QTextBrowser, QSplitter
 
 from . import exercicios
+from .i18n import tr, idioma
 
 CAMERA_PADRAO = "camera {\n    location <0, 3, -7>\n    look_at <0, 1, 0>\n}"
 CHAO_PADRAO = "plane { y, 0 pigment { checker rgb 0.85, rgb 0.6 } }"
@@ -20,12 +21,12 @@ CHAO_PADRAO = "plane { y, 0 pigment { checker rgb 0.85, rgb 0.6 } }"
 
 def cena_completa(trecho, camera=CAMERA_PADRAO, chao=CHAO_PADRAO, extra_inc=()):
     incs = "".join(f'#include "{i}"\n' for i in ("colors.inc",) + tuple(extra_inc))
-    return f"""// Exemplo do guia do PovLive.
-// Mexa à vontade: dica, segure Ctrl e arraste um número para ver o efeito.
+    intro = (CABECALHO_EXEMPLO if idioma() == "pt" else CABECALHO_EXEMPLO_EN)
+    return f"""{intro}
 #version 3.7;
 global_settings {{ assumed_gamma 1.0 }}
 {incs}
-// ---------- cenário ----------
+{tr("// ---------- cenário ----------")}
 {camera}
 
 light_source {{ <4, 8, -6> rgb 1 }}
@@ -33,9 +34,23 @@ light_source {{ <-6, 5, -3> rgb 0.3 shadowless }}
 background {{ rgb <0.55, 0.7, 0.9> }}
 {chao}
 
-// ---------- assunto do exemplo ----------
+{tr("// ---------- assunto do exemplo ----------")}
 {trecho}
 """
+
+
+CABECALHO_EXEMPLO = """// Exemplo do guia do PovLive.
+// Mexa à vontade: dica, segure Ctrl e arraste um número para ver o efeito."""
+CABECALHO_EXEMPLO_EN = """// Example from the PovLive guide.
+// Play with it: tip, hold Ctrl and drag a number to see the effect."""
+
+
+def topicos():
+    """Tópicos do guia no idioma da interface."""
+    if idioma() == "pt":
+        return TOPICOS
+    from .guia_en import TOPICOS as TOPICOS_EN
+    return TOPICOS_EN
 
 
 TOPICOS = [
@@ -459,7 +474,7 @@ na convenção da aula ou na do POV-Ray;</li>
 def exemplos():
     """{id: cena completa} de todos os exemplos (usado também nos testes)."""
     r = {}
-    for _, blocos in TOPICOS:
+    for _, blocos in topicos():
         for b in blocos:
             if b[0] == "ex":
                 _, id_, trecho, op = b
@@ -478,7 +493,7 @@ a { color: #6fa8ff; }
 
 
 def html_topico(i):
-    titulo, blocos = TOPICOS[i]
+    titulo, blocos = topicos()[i]
     partes = [ESTILO, f"<h2>{titulo}</h2>"]
     for b in blocos:
         if b[0] == "txt":
@@ -489,22 +504,24 @@ def html_topico(i):
         else:
             _, id_, trecho, _op = b
             partes.append(f"<pre>{html.escape(trecho)}</pre>"
-                          f"<p><a href='exemplo:{id_}'>▶ Abrir exemplo numa aba nova</a></p>")
+                          f"<p><a href='exemplo:{id_}'>▶ " + tr("Abrir exemplo numa aba nova") + "</a></p>")
     return "\n".join(partes)
 
 
-TITULO_EXERCICIOS = "13. Exercícios"
+def titulo_exercicios():
+    return tr("13. Exercícios")
 
 
 def html_exercicios():
-    partes = [ESTILO, f"<h2>{TITULO_EXERCICIOS}</h2>",
-              "<p>Cada exercício abre numa aba nova com a câmera e as luzes prontas. Escreva sua resposta e use "
-              "<b>Ajuda &gt; Verificar exercício</b> (<b>Ctrl+Shift+V</b>): o app renderiza a sua cena e o gabarito "
-              "e compara as duas imagens. A dica aparece se não estiver certo.</p>"]
+    partes = [ESTILO, f"<h2>{titulo_exercicios()}</h2>",
+              "<p>" + tr("Cada exercício abre numa aba nova com a câmera e as luzes prontas. Escreva sua resposta "
+                         "e use <b>Ajuda &gt; Verificar exercício</b> (<b>Ctrl+Shift+V</b>): o app renderiza a sua "
+                         "cena e o gabarito e compara as duas imagens. A dica aparece se não estiver certo.") + "</p>"]
     for e in exercicios.EXERCICIOS:
-        partes.append(f"<h3>{html.escape(e['titulo'])}</h3><p>{html.escape(e['enunciado'])}</p>"
+        titulo, enunciado = exercicios.campo(e, "titulo"), exercicios.campo(e, "enunciado")
+        partes.append(f"<h3>{html.escape(titulo)}</h3><p>{html.escape(enunciado)}</p>"
                       f"<p><img src='gabarito:{e['id']}' width=320 height=240></p>"
-                      f"<p><a href='exercicio:{e['id']}'>▶ Começar este exercício</a></p>")
+                      f"<p><a href='exercicio:{e['id']}'>▶ " + tr("Começar este exercício") + "</a></p>")
     return "\n".join(partes)
 
 
@@ -529,14 +546,14 @@ class Guia(QDialog):
     def __init__(self, janela):
         super().__init__(janela)
         self.janela = janela
-        self.setWindowTitle("Guia do POV-Ray")
+        self.setWindowTitle(tr("Guia do POV-Ray"))
         self.resize(1000, 720)
         self.cenas = exemplos()
         lay = QHBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         sp = QSplitter()
         self.lista = QListWidget()
-        self.lista.addItems([t for t, _ in TOPICOS] + [TITULO_EXERCICIOS])
+        self.lista.addItems([t for t, _ in topicos()] + [titulo_exercicios()])
         self.lista.setMinimumWidth(250)
         self.lista.setMaximumWidth(320)
         self.texto = Navegador()
@@ -550,14 +567,14 @@ class Guia(QDialog):
         self.lista.setCurrentRow(0)
 
     def _mostrar(self, i):
-        if i == len(TOPICOS):
+        if i == len(topicos()):
             self.texto.setHtml(html_exercicios())
             self._gerar_gabaritos()
         else:
             self.texto.setHtml(html_topico(i))
 
     def ir_para_exercicios(self):
-        self.lista.setCurrentRow(len(TOPICOS))
+        self.lista.setCurrentRow(len(topicos()))
 
     def _gerar_gabaritos(self):
         """Renderiza (uma vez) as imagens dos gabaritos que ainda não estão no cache."""
@@ -571,7 +588,7 @@ class Guia(QDialog):
                                            lambda ok, log: self._recarregar())
 
     def _recarregar(self):
-        if self.lista.currentRow() == len(TOPICOS):
+        if self.lista.currentRow() == len(topicos()):
             barra = self.texto.verticalScrollBar().value()
             self.texto.document().clear()
             self.texto.setHtml(html_exercicios())

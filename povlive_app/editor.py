@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (QPlainTextEdit, QWidget, QTextEdit, QCompleter, QTo
                              QHBoxLayout, QLineEdit, QCheckBox, QToolButton, QLabel, QAction)
 
 from . import pov
+from .i18n import tr
 
 PARES = {"{": "}", "(": ")", "[": "]", "<": ">", '"': '"'}
 FECHA = {v: k for k, v in PARES.items()}
@@ -328,10 +329,8 @@ class Editor(QPlainTextEdit):
         if ev.type() == QEvent.ToolTip:
             pos = self.viewport().mapFromGlobal(ev.globalPos())
             palavra = self._palavra_em(pos)
-            dica = None
-            if palavra in pov.AJUDA:
-                dica = pov.AJUDA[palavra]
-            elif palavra in self.nomes:
+            dica = pov.ajuda(palavra)
+            if dica is None and palavra in self.nomes:
                 dica = self.nomes[palavra]
             if dica:
                 QToolTip.showText(ev.globalPos(), "<pre style='margin:0'>" + dica.replace("&", "&amp;")
@@ -367,7 +366,7 @@ class Editor(QPlainTextEdit):
         texto_original = self.document().toPlainText()[ini:fim]
         inicial = QColor.fromRgbF(*[max(0.0, min(1.0, v)) for v in rgb])
         dlg = self.dlg_cor = QColorDialog(inicial, self)
-        dlg.setWindowTitle("Escolher cor (atualiza ao vivo)")
+        dlg.setWindowTitle(tr("Escolher cor (atualiza ao vivo)"))
         dlg.setOption(QColorDialog.DontUseNativeDialog)
 
         def mudar(cor):
@@ -394,7 +393,7 @@ class Editor(QPlainTextEdit):
         menu = self.createStandardContextMenu()
         if self.rgb_no_cursor():
             primeira = menu.actions()[0]
-            acao = QAction("Escolher cor…", menu)
+            acao = QAction(tr("Escolher cor…"), menu)
             acao.triggered.connect(self.escolher_cor)
             menu.insertAction(primeira, acao)
             menu.insertSeparator(primeira)
@@ -621,25 +620,25 @@ class BarraBusca(QWidget):
         self.ed = obter_editor
         lay = QHBoxLayout(self)
         lay.setContentsMargins(4, 2, 4, 2)
-        self.campo = QLineEdit(placeholderText="Buscar")
-        self.troca = QLineEdit(placeholderText="Substituir por")
+        self.campo = QLineEdit(placeholderText=tr("Buscar"))
+        self.troca = QLineEdit(placeholderText=tr("Substituir por"))
         self.maiusc = QCheckBox("Aa")
-        self.maiusc.setToolTip("Diferenciar maiúsculas")
+        self.maiusc.setToolTip(tr("Diferenciar maiúsculas"))
         self.info = QLabel()
         lay.addWidget(self.campo, 2)
-        for txt, dica, f in (("↑", "Anterior (Shift+Enter)", lambda: self.achar(True)),
-                             ("↓", "Próximo (Enter)", self.achar)):
+        for txt, dica, f in (("↑", tr("Anterior (Shift+Enter)"), lambda: self.achar(True)),
+                             ("↓", tr("Próximo (Enter)"), self.achar)):
             b = QToolButton(text=txt, toolTip=dica)
             b.clicked.connect(f)
             lay.addWidget(b)
         lay.addWidget(self.maiusc)
         lay.addWidget(self.troca, 2)
-        for txt, f in (("Substituir", self.substituir), ("Todos", self.substituir_todos)):
+        for txt, f in ((tr("Substituir"), self.substituir), (tr("Todos"), self.substituir_todos)):
             b = QToolButton(text=txt)
             b.clicked.connect(f)
             lay.addWidget(b)
         lay.addWidget(self.info)
-        fechar = QToolButton(text="✕", toolTip="Fechar (Esc)")
+        fechar = QToolButton(text="✕", toolTip=tr("Fechar (Esc)"))
         fechar.clicked.connect(self.fechar)
         lay.addWidget(fechar)
         self.campo.textChanged.connect(self._mudou)
@@ -693,7 +692,7 @@ class BarraBusca(QWidget):
         termo = self.campo.text()
         if termo:
             n = t.count(termo) if self.maiusc.isChecked() else t.lower().count(termo.lower())
-            self.info.setText(f"{n} achado(s)")
+            self.info.setText(tr("{} achado(s)").format(n))
             self.campo.setStyleSheet("" if n else "background:#5a1e1e")
         else:
             self.info.setText("")
@@ -736,4 +735,4 @@ class BarraBusca(QWidget):
             achado = doc.find(termo, achado, self._flags())
         c.endEditBlock()
         self._mudou()
-        self.info.setText(f"{n} substituído(s)")
+        self.info.setText(tr("{} substituído(s)").format(n))

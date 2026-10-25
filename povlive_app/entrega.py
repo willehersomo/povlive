@@ -4,6 +4,7 @@ import glob, os, re, shutil, tempfile, time, zipfile
 from PyQt5.QtCore import QObject, QProcess, pyqtSignal
 
 from . import pov
+from .i18n import tr, idioma
 
 
 def includes_locais(texto, pasta, conteudos, vistos=None):
@@ -48,7 +49,7 @@ class Exportador(QObject):
             with open(destino, "w", encoding="utf-8") as f:
                 f.write(t)
         w, h = self.tamanho
-        self.progresso.emit(f"Renderizando a imagem final ({w}×{h} com antialiasing)…", 5)
+        self.progresso.emit(tr("Renderizando a imagem final ({} com antialiasing)…").format(f"{w}×{h}"), 5)
         self._rodar(["+Q11", "+A0.3", f"+W{w}", f"+H{h}", f"+O{os.path.splitext(self.nome)[0]}.png"], self._depois_png)
 
     def cancelar(self):
@@ -68,10 +69,10 @@ class Exportador(QObject):
 
     def _depois_png(self, rc, log):
         if rc != 0:
-            return self._falhar("A imagem final não renderizou:\n" + log[-600:])
+            return self._falhar(tr("A imagem final não renderizou:") + "\n" + log[-600:])
         if self.animada:
             n = self.quadros
-            self.progresso.emit(f"Renderizando a animação ({n} quadros)…", 40)
+            self.progresso.emit(tr("Renderizando a animação ({} quadros)…").format(n), 40)
             os.makedirs(os.path.join(self.trab, "_quadros"))
             self._rodar(["+Q9", "+W480", "+H360", os.path.join("+O_quadros", "q.png"),
                          "+KFI0", f"+KFF{n - 1}", "+KI0", f"+KF{(n - 1) / n:.6f}"], self._depois_gif)
@@ -80,7 +81,7 @@ class Exportador(QObject):
 
     def _depois_gif(self, rc, log):
         if rc != 0:
-            return self._falhar("A animação não renderizou:\n" + log[-600:])
+            return self._falhar(tr("A animação não renderizou:") + "\n" + log[-600:])
         try:
             from PIL import Image
             quadros = sorted(glob.glob(os.path.join(self.trab, "_quadros", "*.png")))
@@ -95,19 +96,20 @@ class Exportador(QObject):
     def _empacotar(self):
         if self.cancelado:
             return
-        self.progresso.emit("Montando o .zip…", 90)
+        self.progresso.emit(tr("Montando o .zip…"), 90)
         base = os.path.splitext(self.nome)[0]
         w, h = self.tamanho
         arquivos = sorted(os.path.relpath(os.path.join(r, f), self.trab)
                           for r, _, fs in os.walk(self.trab) for f in fs)
-        leia = [f"Entrega: {base}", f"Gerado em {time.strftime('%d/%m/%Y %H:%M')} pelo PovLive.", "",
-                "Arquivos:"] + [f"  {a}" for a in arquivos] + [
-                "", "Para renderizar de novo:",
+        data = time.strftime("%d/%m/%Y %H:%M" if idioma() == "pt" else "%Y-%m-%d %H:%M")
+        leia = [tr("Entrega: {}").format(base), tr("Gerado em {} pelo PovLive.").format(data), "",
+                tr("Arquivos:")] + [f"  {a}" for a in arquivos] + [
+                "", tr("Para renderizar de novo:"),
                 f"  povray +I{self.nome} +W{w} +H{h} +A0.3"]
         if self.animada:
-            leia += ["", "Animação (usa a variável clock):",
+            leia += ["", tr("Animação (usa a variável clock):"),
                      f"  povray +I{self.nome} +W480 +H360 +KFI0 +KFF{self.quadros - 1} +KI0 +KF{(self.quadros - 1) / self.quadros:.4f}"]
-        with open(os.path.join(self.trab, "LEIAME.txt"), "w", encoding="utf-8") as f:
+        with open(os.path.join(self.trab, tr("LEIAME.txt")), "w", encoding="utf-8") as f:
             f.write("\n".join(leia) + "\n")
         with zipfile.ZipFile(self.saida, "w", zipfile.ZIP_DEFLATED) as z:
             for r, _, fs in os.walk(self.trab):

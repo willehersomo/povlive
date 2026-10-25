@@ -4,7 +4,7 @@ import os, re
 import pytest
 
 from conftest import precisa_povray, renderizar, CENAS
-from povlive_app import formatador, selecao, avisos, pov, sdl, exercicios as X, guia, cache_orbita as CO
+from povlive_app import formatador, selecao, avisos, pov, sdl, exercicios as X, guia, cache_orbita as CO, i18n
 
 
 # ---------------------------------------------------------------- formatador
@@ -134,8 +134,10 @@ def test_cache_cobre_cada_angulo_uma_vez():
 # ---------------------------------------------------------------- exercícios e guia
 
 @precisa_povray
+@pytest.mark.parametrize("idioma", ["pt", "en"])
 @pytest.mark.parametrize("ex", X.EXERCICIOS, ids=[e["id"] for e in X.EXERCICIOS])
-def test_exercicio_gabarito_passa_e_inicio_nao(ex, tmp_path):
+def test_exercicio_gabarito_passa_e_inicio_nao(ex, idioma, tmp_path):
+    i18n.definir(idioma)
     w, h = X.TAMANHO
     args = [f"+W{w}", f"+H{h}"]
     vazio, _ = renderizar(X.texto_vazio(ex), tmp_path, w, h, X.ARGS)
@@ -147,8 +149,10 @@ def test_exercicio_gabarito_passa_e_inicio_nao(ex, tmp_path):
 
 
 @precisa_povray
+@pytest.mark.parametrize("idioma", ["pt", "en"])
 @pytest.mark.parametrize("id_", sorted(guia.exemplos()))
-def test_exemplo_do_guia_renderiza_sem_erro_nem_aviso(id_, tmp_path):
+def test_exemplo_do_guia_renderiza_sem_erro_nem_aviso(id_, idioma, tmp_path):
+    i18n.definir(idioma)
     _, saida = renderizar(guia.exemplos()[id_], tmp_path, 80, 60, ["+K0.3"])
     assert not avisos.ler(saida), avisos.ler(saida)
 
