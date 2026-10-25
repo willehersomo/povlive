@@ -85,7 +85,6 @@ class CacheOrbita(QObject):
         fonte = "cena_orbita.pov"
         with open(os.path.join(trab, fonte), "w", encoding="utf-8") as f:
             f.write(texto + self._camera_sdl(orbita))
-        nice = shutil.which("nice")
         for p in range(NPROC):
             a = args(fonte, os.path.join("orbita", "c.png"))
             a += ["+KFI1", f"+KFF{NPROC * CHUNK}", f"+SF{p * CHUNK + 1}", f"+EF{(p + 1) * CHUNK}"]
@@ -94,10 +93,7 @@ class CacheOrbita(QObject):
             proc.setProcessChannelMode(QProcess.MergedChannels)
             proc.setStandardOutputFile(QProcess.nullDevice())
             proc.finished.connect(self._coletar)
-            if nice:  # prioridade baixa: não atrapalha o resto do computador
-                proc.start(nice, ["-n", "10", pov.EXECUTAVEL] + a)
-            else:
-                proc.start(pov.EXECUTAVEL, a)
+            pov.iniciar(proc, a, baixa_prioridade=True)   # não atrapalha o resto do computador
             self.procs.append((proc, range(p * CHUNK + 1, (p + 1) * CHUNK + 1)))
         self.timer.start()
 

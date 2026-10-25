@@ -4,3 +4,7 @@ __pycache__/
 *.deb
 empacotamento/povlive_*/
 *.pov-state
+/povray/
+/dist/
+/build/
+*.spec

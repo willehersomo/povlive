@@ -2,6 +2,7 @@
 import hashlib, os, re
 
 from .i18n import idioma
+from . import plataforma
 
 CENARIO = """#version 3.7;
 global_settings {{ assumed_gamma 1.0 }}
@@ -208,7 +209,7 @@ def _quebrar(s, n):
 
 
 def pasta_cache():
-    d = os.path.join(os.path.expanduser("~/.cache"), "povlive", "exercicios")
+    d = os.path.join(plataforma.pasta_cache(), "exercicios")
     os.makedirs(d, exist_ok=True)
     return d
 

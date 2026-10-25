@@ -15,7 +15,7 @@ atexit.register(shutil.rmtree, os.environ["HOME"], True)
 from PyQt5.QtCore import Qt, QPointF, QEvent, QRect
 from PyQt5.QtGui import QMouseEvent, QTextCursor
 from PyQt5.QtWidgets import QApplication
-from povlive_app import janela as J, guia as G, exercicios as X, i18n
+from povlive_app import janela as J, guia as G, i18n
 
 i18n.carregar()
 EN = i18n.idioma() == "en"

@@ -6,6 +6,7 @@ from PyQt5.QtGui import QColor, QPainter, QIcon, QFont, QPixmap
 from PyQt5.QtWidgets import QWidget, QGridLayout, QListWidget, QListWidgetItem, QListView
 
 from .i18n import tr
+from . import plataforma
 
 
 class Visor(QWidget):
@@ -390,7 +391,7 @@ class Historico(QListWidget):
     @staticmethod
     def pasta_para(caminho):
         """Pasta onde fica o histórico de uma cena (uma por arquivo)."""
-        base = os.path.join(os.path.expanduser("~/.local/share"), "povlive", "historico")
+        base = os.path.join(plataforma.pasta_dados(), "historico")
         return os.path.join(base, hashlib.sha1(caminho.encode()).hexdigest()[:16])
 
     def carregar(self, caminho):

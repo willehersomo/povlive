@@ -7,7 +7,7 @@ o que o POV-Ray da máquina realmente tem.
 import os, re
 from collections import namedtuple
 
-from . import pov, sdl
+from . import pov, sdl, plataforma
 from .i18n import N_
 
 Item = namedtuple("Item", "nome tipo include categoria")   # tipo: texture|material|pigment|finish|color
@@ -250,8 +250,7 @@ def cena_miniaturas(itens):
 
 
 def pasta_cache():
-    base = os.environ.get("XDG_CACHE_HOME") or os.path.join(os.path.expanduser("~"), ".cache")
-    return os.path.join(base, "povlive", f"miniaturas{VERSAO_MINIATURA}_{TAMANHO}")
+    return os.path.join(plataforma.pasta_cache(), f"miniaturas{VERSAO_MINIATURA}_{TAMANHO}")
 
 
 def arquivo_miniatura(item, pasta=None):

@@ -4,7 +4,7 @@ import math, subprocess
 import pytest
 
 from conftest import precisa_povray
-from povlive_app import sdl, matrizes as M
+from povlive_app import sdl, matrizes as M, pov
 
 
 def test_blocos_e_objeto_sob_o_cursor():
@@ -99,7 +99,7 @@ global_settings {{ assumed_gamma 1 }}
 camera {{ location -5 look_at 0 }} light_source {{ <0,5,-5> rgb 1 }} sphere {{ 0, 0.1 pigment {{ rgb 1 }} }}
 """
     (tmp_path / "v.pov").write_text(cena)
-    r = subprocess.run(["povray", "+Iv.pov", "+Oo.png", "+W8", "+H8", "-D"], cwd=tmp_path,
+    r = subprocess.run(pov.comando(["+Iv.pov", "+Oo.png", "+W8", "+H8", "-D"]), cwd=tmp_path,
                        capture_output=True, text=True)
     linha = [l for l in r.stderr.splitlines() if l.startswith("RES ")][0]
     esperado = tuple(map(float, linha.split()[1:4]))

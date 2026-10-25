@@ -1,5 +1,5 @@
 """Formatador, seleção por cor, avisos, cache de órbita, câmera, exercícios e exemplos do guia."""
-import os, re
+import os
 
 import pytest
 
@@ -139,7 +139,6 @@ def test_cache_cobre_cada_angulo_uma_vez():
 def test_exercicio_gabarito_passa_e_inicio_nao(ex, idioma, tmp_path):
     i18n.definir(idioma)
     w, h = X.TAMANHO
-    args = [f"+W{w}", f"+H{h}"]
     vazio, _ = renderizar(X.texto_vazio(ex), tmp_path, w, h, X.ARGS)
     gab, _ = renderizar(X.texto_gabarito(ex), tmp_path, w, h, X.ARGS)
     ini, _ = renderizar(X.texto_inicial(ex), tmp_path, w, h, X.ARGS)

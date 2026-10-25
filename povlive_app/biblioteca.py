@@ -38,7 +38,6 @@ class GeradorMiniaturas(QObject):
             self.acabou.emit()
             return 0
         os.makedirs(self.pasta, exist_ok=True)
-        nice = shutil.which("nice")
         for k in range(min(self.nproc, len(faltam))):
             parte = faltam[k::self.nproc]          # intercalado: o começo da lista aparece primeiro
             trab = tempfile.mkdtemp(prefix="povlive_mini_")
@@ -51,10 +50,7 @@ class GeradorMiniaturas(QObject):
             p.setWorkingDirectory(trab)
             p.setProcessChannelMode(QProcess.MergedChannels)
             p.setStandardOutputFile(QProcess.nullDevice())
-            if nice:
-                p.start(nice, ["-n", "10", pov.EXECUTAVEL] + a)
-            else:
-                p.start(pov.EXECUTAVEL, a)
+            pov.iniciar(p, a, baixa_prioridade=True)
             self.procs.append({"proc": p, "trab": trab, "itens": parte, "prox": 1})
         self.timer.start()
         return len(faltam)

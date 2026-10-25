@@ -2,13 +2,13 @@
 import glob, math, os, re, shutil, sys, tempfile, time
 
 from PyQt5.QtCore import Qt, QTimer, QProcess, QFileSystemWatcher, QSettings, QSize
-from PyQt5.QtGui import QColor, QFont, QPalette, QKeySequence, QTextCursor
+from PyQt5.QtGui import QColor, QPalette, QKeySequence, QTextCursor
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPlainTextEdit, QWidget, QLabel, QSplitter,
                              QToolBar, QComboBox, QCheckBox, QFileDialog, QMessageBox, QAction,
                              QSlider, QDoubleSpinBox, QVBoxLayout, QInputDialog, QProgressDialog,
                              QToolButton, QTabWidget, QStackedWidget)
 
-from . import pov
+from . import pov, plataforma
 from .editor import Editor, BarraBusca
 from .visor import Visor, QuatroVistas, Historico
 from .cache_orbita import CacheOrbita, angulo_dif
@@ -368,7 +368,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         self.sl_clock.keyPressEvent = self._tecla_clock
         tb.addWidget(self.sl_clock)
         self.lb_clock = QLabel(" 0.000 ")
-        self.lb_clock.setFont(QFont("Monospace"))
+        self.lb_clock.setFont(plataforma.fonte_mono())
         tb.addWidget(self.lb_clock)
         tb.addAction(self._acao(tr("Exportar GIF"), self.exportar_gif))
         self._atualizar_barra_vistas()
@@ -872,7 +872,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         p.setStandardOutputFile(QProcess.nullDevice())
         p.finished.connect(lambda rc, _s, l=l: self._live_terminou(l, rc))
         self.live.append(l)
-        p.start(pov.EXECUTAVEL, self._args(fonte, png, max(80, w // 2), max(60, h // 2), q, False, self._clock()))
+        pov.iniciar(p, self._args(fonte, png, max(80, w // 2), max(60, h // 2), q, False, self._clock()))
 
     def _live_terminou(self, l, rc):
         from PyQt5.QtGui import QPixmap
@@ -1165,7 +1165,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
             p.finished.connect(lambda rc, _s, i=i: self._um_terminou(i, rc))
             p.errorOccurred.connect(self._falhou)
             self.procs.append((p, png))
-            p.start(pov.EXECUTAVEL, self._args(fonte, png, w, h, q, aa, self._clock()))
+            pov.iniciar(p, self._args(fonte, png, w, h, q, aa, self._clock()))
         if job != "previa":
             self.status.showMessage(tr("Renderizando {}").format(f"{w}×{h}") + (" " + tr("(4 vistas)") if quatro else "") + "…")
 
@@ -1304,7 +1304,7 @@ class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
         p.setWorkingDirectory(trab)
         p.setProcessChannelMode(QProcess.MergedChannels)
         p.finished.connect(self._gif_terminou)
-        p.start(pov.EXECUTAVEL, args)
+        pov.iniciar(p, args)
 
     def _gif_terminou(self, rc, _status):
         g = self.gif
@@ -1354,13 +1354,58 @@ def tema_escuro(app):
     app.setStyleSheet("QToolTip { color: #ddd; background: #333; border: 1px solid #555; }")
 
 
+def autoteste(app):
+    """Abre o app com uma cena simples, espera o render do POV-Ray e sai com 0 (deu certo) ou 1.
+    Serve para conferir um pacote/instalação: povlive --autoteste"""
+    import tempfile
+    pasta = tempfile.mkdtemp(prefix="povlive_autoteste_")
+    # não mexe nas configurações, no histórico nem no cache do usuário
+    for formato in (QSettings.NativeFormat, QSettings.IniFormat):
+        QSettings.setPath(formato, QSettings.UserScope, os.path.join(pasta, "config"))
+    for var in ("XDG_DATA_HOME", "XDG_CACHE_HOME", "LOCALAPPDATA"):
+        os.environ[var] = os.path.join(pasta, var.lower())
+    cena = os.path.join(pasta, "teste.pov")
+    with open(cena, "w", encoding="utf-8") as f:
+        f.write('#version 3.7;\nglobal_settings { assumed_gamma 1.0 }\n#include "colors.inc"\n'
+                "camera { location <0, 1, -4> look_at 0 }\nlight_source { <2, 4, -3> rgb 1 }\n"
+                "sphere { 0, 1 pigment { color Red } }\n")
+    j = Janela([cena])
+    j.show()
+    fim = time.time() + 120
+    while time.time() < fim and not j.status.currentMessage().startswith("OK"):
+        app.processEvents()
+        time.sleep(0.02)
+    ok = j.ultima_pix is not None and j.status.currentMessage().startswith("OK")
+    msg = ("autoteste: " + ("ok" if ok else "FALHOU: " + j.status.currentMessage() + "\n" + j.log.toPlainText())
+           + f" | povray: {pov.EXECUTAVEL} | includes: {pov.BIBLIOTECA}")
+    print(msg)
+    if os.environ.get("POVLIVE_AUTOTESTE_LOG"):     # o .exe do Windows não tem terminal
+        with open(os.environ["POVLIVE_AUTOTESTE_LOG"], "w", encoding="utf-8") as f:
+            f.write(msg + "\n")
+    j.cena.document().setModified(False)
+    j.close()
+    shutil.rmtree(pasta, ignore_errors=True)
+    return 0 if ok else 1
+
+
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("PovLive")
     app.setDesktopFileName("povlive")
+    icone = plataforma.recurso(os.path.join("empacotamento", "povlive.svg"))
+    if icone:
+        from PyQt5.QtGui import QIcon
+        app.setWindowIcon(QIcon(icone))
+    args = sys.argv[1:]
+    if "--version" in args or "--versao" in args:
+        from . import __version__
+        print("PovLive", __version__)
+        return
     i18n.carregar()
     i18n.instalar_tradutor_qt(app)
     tema_escuro(app)
-    j = Janela(sys.argv[1:])
+    if "--autoteste" in args:
+        sys.exit(autoteste(app))
+    j = Janela(args)
     j.show()
     sys.exit(app.exec_())

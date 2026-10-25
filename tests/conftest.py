@@ -8,7 +8,9 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RAIZ)
 CENAS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cenas")
 
-tem_povray = shutil.which("povray") is not None
+from povlive_app import pov  # noqa: E402
+
+tem_povray = os.path.isfile(pov.EXECUTAVEL) or shutil.which(pov.EXECUTAVEL) is not None
 precisa_povray = pytest.mark.skipif(not tem_povray, reason="povray não instalado")
 
 
@@ -17,6 +19,10 @@ def home_temporario(tmp_path, monkeypatch):
     """Configurações, histórico e cache vão para uma pasta temporária (não mexe no usuário)."""
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "home" / ".config"))
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "home" / ".cache"))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "home" / ".local" / "share"))
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "home" / "AppData"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     (tmp_path / "home").mkdir()
     monkeypatch.delenv("POVLIVE_LANG", raising=False)
     from povlive_app import i18n
@@ -58,7 +64,7 @@ def renderizar(texto, pasta, w=160, h=120, extra=()):
     saida = os.path.join(str(pasta), "t.png")
     with open(fonte, "w") as f:
         f.write(texto)
-    r = subprocess.run(["povray", "+It.pov", "+Ot.png", f"+W{w}", f"+H{h}", "-D", "-V"] + list(extra),
+    r = subprocess.run(pov.comando(["+It.pov", "+Ot.png", f"+W{w}", f"+H{h}", "-D", "-V"] + list(extra)),
                        cwd=str(pasta), capture_output=True, text=True)
     assert r.returncode == 0, (r.stdout + r.stderr)[-800:]
     return np.array(Image.open(saida).convert("RGB")), r.stdout + r.stderr

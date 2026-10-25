@@ -6,7 +6,7 @@ Uso:  python3 povlive.py arquivo.pov [--porta 8765] [--largura 640 --altura 480]
 Abre no navegador: código à esquerda, imagem à direita.
 A cada alteração (no navegador ou salvando no VS Code) a cena é renderizada de novo.
 """
-import argparse, base64, json, os, subprocess, sys, tempfile, threading, webbrowser
+import argparse, base64, json, os, subprocess, tempfile, threading, webbrowser
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 ap = argparse.ArgumentParser()

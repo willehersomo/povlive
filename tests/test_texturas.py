@@ -1,5 +1,4 @@
 """Biblioteca de texturas: catálogo, aplicar no código, miniaturas e arrastar até a imagem."""
-import os
 
 import pytest
 from PyQt5.QtGui import QImage

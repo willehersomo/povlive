@@ -7,7 +7,7 @@ from PyQt5.QtGui import (QColor, QFont, QPainter, QSyntaxHighlighter, QTextCharF
 from PyQt5.QtWidgets import (QPlainTextEdit, QWidget, QTextEdit, QCompleter, QToolTip, QColorDialog,
                              QHBoxLayout, QLineEdit, QCheckBox, QToolButton, QLabel, QAction)
 
-from . import pov
+from . import pov, plataforma
 from .i18n import tr
 
 PARES = {"{": "}", "(": ")", "[": "]", "<": ">", '"': '"'}
@@ -92,7 +92,7 @@ class Editor(QPlainTextEdit):
 
     def __init__(self):
         super().__init__()
-        f = QFont("Monospace", 11)
+        f = plataforma.fonte_mono(11)
         f.setStyleHint(QFont.TypeWriter)
         self.setFont(f)
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(" ") * 4)

@@ -59,7 +59,7 @@ class FilaRender(QObject):
         a = ["+Icena.pov", f"+O{tmp_png}"] + args
         if pasta_extra:
             a.append(f"+L{pasta_extra}")
-        p.start(pov.EXECUTAVEL, a)
+        pov.iniciar(p, a)
 
     def _terminou(self, rc, _status):
         trab, saida, pronto, tmp_png = self.atual

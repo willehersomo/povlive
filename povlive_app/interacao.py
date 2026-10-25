@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5.QtCore import QSize, QTimer, Qt
 from PyQt5.QtGui import QPixmap
 
-from . import pov, sdl, matrizes, selecao, previa3d
+from . import pov, matrizes, selecao, previa3d
 from .i18n import tr
 
 PASSO_ROTACAO = 0.6   # graus por pixel ao arrastar o anel

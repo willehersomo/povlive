@@ -1,0 +1,101 @@
+name: Windows
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  povray:
+    # POV-Ray de linha de comando (a versão Unix) compilado no Cygwin; fica em cache entre execuções
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+      - id: cache
+        uses: actions/cache@v6
+        with:
+          path: povray-win
+          key: povray-3.7.0.10-cygwin-${{ hashFiles('empacotamento/windows/compilar_povray.sh') }}
+      - if: steps.cache.outputs.cache-hit != 'true'
+        uses: cygwin/cygwin-install-action@v7
+        with:
+          packages: >-
+            gcc-g++ make autoconf automake libtool curl
+            libboost-devel zlib-devel libpng-devel libjpeg-devel libtiff-devel
+      - if: steps.cache.outputs.cache-hit != 'true'
+        name: Compilar o POV-Ray
+        shell: C:\cygwin\bin\bash.exe --noprofile --norc -eo pipefail -o igncr '{0}'
+        run: |
+          export PATH=/usr/local/bin:/usr/bin:$PATH
+          bash empacotamento/windows/compilar_povray.sh "$(cygpath -u "$GITHUB_WORKSPACE")/povray-win"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: povray-win
+          path: povray-win
+
+  app:
+    needs: povray
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: povray-win
+          path: povray
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Dependências
+        run: python -m pip install PyQt5 numpy pillow PyOpenGL pytest pyinstaller
+
+      - name: POV-Ray funciona
+        run: |
+          povray\bin\povray.exe --version
+          Set-Content -Path t.pov -Value '#include "colors.inc" sphere { 0, 1 pigment { Red } } camera { location -3*z look_at 0 } light_source { <2,4,-3> rgb 1 }'
+          povray\bin\povray.exe +It.pov +Ot.png +W64 +H48 -D +Lpovray/share/povray-3.7/include
+          if (!(Test-Path t.png)) { exit 1 }
+
+      - name: Testes
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest -q
+
+      - name: Executável (PyInstaller)
+        run: |
+          pyinstaller --noconfirm --windowed --name PovLive --icon empacotamento/povlive.ico `
+            --add-data "empacotamento/povlive.svg;empacotamento" `
+            --collect-submodules OpenGL povlive.py
+          Copy-Item -Recurse povray dist/PovLive/povray
+
+      - name: Autoteste do executável
+        env:
+          QT_QPA_PLATFORM: offscreen
+          POVLIVE_AUTOTESTE_LOG: ${{ github.workspace }}\autoteste.txt
+        run: |
+          $p = Start-Process -FilePath dist\PovLive\PovLive.exe -ArgumentList "--autoteste" -Wait -PassThru
+          Get-Content autoteste.txt
+          if ($p.ExitCode -ne 0) { exit 1 }
+
+      - name: Instalador e zip
+        shell: pwsh
+        run: |
+          $v = python -c "import povlive_app; print(povlive_app.__version__)"
+          $env:POVLIVE_VERSAO = $v
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" empacotamento\windows\povlive.iss
+          Compress-Archive -Path dist\PovLive -DestinationPath "dist\PovLive-$v-windows.zip"
+          Get-ChildItem dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: povlive-windows
+          path: |
+            dist/*-setup.exe
+            dist/*-windows.zip
+
+      - if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            dist/*-setup.exe
+            dist/*-windows.zip

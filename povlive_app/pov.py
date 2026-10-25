@@ -1,11 +1,27 @@
 """Tudo que é específico do POV-Ray: vocabulário, includes, câmera, eixos, vistas, ajuda e modelos."""
-import glob, math, os, re, shutil
+import math, os, re
 
+from . import plataforma
 from .i18n import N_, tr, idioma
 
-BIBLIOTECA = sorted(glob.glob("/usr/share/povray-3*/include"))[-1:]
-# programa do POV-Ray (POVLIVE_POVRAY escolhe outro)
-EXECUTAVEL = os.environ.get("POVLIVE_POVRAY") or shutil.which("povray") or "povray"
+BIBLIOTECA = plataforma.biblioteca()      # pasta dos includes padrão (colors.inc...)
+EXECUTAVEL = plataforma.executavel()      # programa do POV-Ray (POVLIVE_POVRAY escolhe outro)
+
+
+def iniciar(proc, args, baixa_prioridade=False):
+    """Roda o POV-Ray num QProcess, com os caminhos no formato certo e a pasta dos includes padrão."""
+    a = plataforma.argumentos(args, BIBLIOTECA)
+    nice = plataforma.nice() if baixa_prioridade else None
+    if nice:
+        proc.start(nice, ["-n", "10", EXECUTAVEL] + a)
+    else:
+        proc.start(EXECUTAVEL, a)
+
+
+def comando(args):
+    """Lista para subprocess: o POV-Ray com os argumentos ajustados."""
+    return [EXECUTAVEL] + plataforma.argumentos(args, BIBLIOTECA)
+
 
 PALAVRAS = """camera light_source sphere box cylinder cone plane torus disc triangle smooth_triangle
 prism lathe sor superellipsoid blob height_field text union difference intersection
