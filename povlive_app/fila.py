@@ -3,6 +3,8 @@ import os, shutil, tempfile
 
 from PyQt5.QtCore import QObject, QProcess
 
+from . import pov
+
 
 class FilaRender(QObject):
     def __init__(self, parent=None):
@@ -57,7 +59,7 @@ class FilaRender(QObject):
         a = ["+Icena.pov", f"+O{tmp_png}"] + args
         if pasta_extra:
             a.append(f"+L{pasta_extra}")
-        p.start("povray", a)
+        p.start(pov.EXECUTAVEL, a)
 
     def _terminou(self, rc, _status):
         trab, saida, pronto, tmp_png = self.atual

@@ -7,7 +7,8 @@
 **PovLive** is a [POV-Ray](https://www.povray.org/) scene editor for Linux, with the code on one side and the image
 on the other, rendered as you type. It was made for learning Computer Graphics: besides the live preview, it
 shows the **transformation matrices**, lets you **click and drag objects in the image**, has a **free camera
-controlled by the mouse**, **four views**, a **guide with 33 examples** and **auto-graded exercises**.
+controlled by the mouse**, **four views**, a **texture library with thumbnails**, a **guide with
+33 examples** and **auto-graded exercises**.
 
 The interface is available in English and Portuguese.
 
@@ -51,6 +52,13 @@ The interface is available in English and Portuguese.
 |---|---|---|
 | ![](docs/img/en/quatro_vistas.png) | ![](docs/img/en/matrizes.png) | ![](docs/img/en/exercicio.png) |
 
+**Texture library (F10)**: the ready-made textures that come with POV-Ray (metals, woods, stones, glass,
+skies, finishes and colors, 434 in all), each one with a thumbnail. **Drag a texture onto an object in the image**
+(or double-click it with the cursor in the object) and the code is updated, `#include` included. Thumbnails are
+rendered once, in the background, and cached.
+
+![Texture library](docs/img/en/texturas.png)
+
 **Editor**: syntax highlighting, autocomplete (including names from `#include` files), help on hover, automatic
 closing of `{ ( [ < "`, matching brace highlight, comment with Ctrl+/, find and replace, format (Ctrl+Shift+F),
 live color picker, ready-made templates (Insert menu) and tabs.
@@ -64,7 +72,7 @@ the `.inc` files, a high-resolution image, the GIF and a README with the command
 [Releases](https://github.com/willehersomo/povlive/releases):
 
 ```bash
-sudo apt install ./povlive_3.2.0_all.deb    # also installs povray, PyQt5 and Pillow
+sudo apt install ./povlive_3.3.0_all.deb    # also installs povray, PyQt5 and Pillow
 povlive scene.pov
 ```
 
@@ -135,6 +143,7 @@ povlive_app/
   sdl.py                reading POV-Ray code: blocks, expressions, transformations
   matrizes.py           4×4 matrices in both conventions
   selecao.py            unique colors per object (click/drag)
+  texturas.py, biblioteca.py  texture library (catalog, applying to the code, thumbnails, panel)
   i18n.py, traducoes_en.py  interface language
   pov.py, guia.py, guia_en.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
 tests/                  tests (pytest, headless Qt)
@@ -152,10 +161,11 @@ this README and the guide are available in English.
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-There are 140 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
+There are 149 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
 formatting must be identical), selection by color, warnings, the 33 guide examples in both languages (none may
 produce an error or warning), the 7 exercises (the answer key passes and the starting code does not), the
-translation, integration tests that open the app, type, click and drag on the image, export a submission and
+translation, the texture library (every category renders without warnings, dragging a texture onto an object),
+integration tests that open the app, type, click and drag on the image, export a submission and
 check the history, and the OpenGL preview (its silhouette must match POV-Ray's). CI runs everything on every
 push and builds the `.deb`; on a `v*` tag, the `.deb` is published in Releases.
 

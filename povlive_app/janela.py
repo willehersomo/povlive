@@ -14,6 +14,7 @@ from .visor import Visor, QuatroVistas, Historico
 from .cache_orbita import CacheOrbita, angulo_dif
 from .recursos import RecursosMixin
 from .interacao import InteracaoMixin
+from .biblioteca import TexturasMixin
 from .i18n import tr, N_, IDIOMAS, idioma
 from . import i18n
 
@@ -45,6 +46,7 @@ ATALHOS = [
     ("Ctrl+E", N_("eixos X/Y/Z")),
     ("Ctrl+P", N_("fixar imagem para comparar")),
     ("F9", N_("painel de matrizes do objeto sob o cursor")),
+    ("F10", N_("biblioteca de texturas (duplo clique aplica; arraste até o objeto na imagem)")),
     (N_("Clique na imagem"), N_("vai para a linha do objeto clicado")),
     (N_("Ctrl + arrastar na imagem"), N_("move o objeto (Shift = passos de 0.1)")),
     (N_("Setas X/Y/Z e anel do objeto clicado"), N_("movem num eixo / giram em y (Shift = passos maiores); Esc solta")),
@@ -71,7 +73,7 @@ def atalhos_html():
     return "<table cellspacing=4>\n" + "\n".join(linhas) + "\n</table>"
 
 
-class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
+class Janela(TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
     def __init__(self, arquivos=()):
         super().__init__()
         self.cfg = QSettings("povlive", "povlive")
@@ -105,6 +107,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
 
         self._montar()
         self._montar_recursos()
+        self._montar_texturas()
         self._menus()
         self._barras()
         self._montar_interacao()
@@ -264,12 +267,15 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
                                      tr("Enquanto você arrasta câmera, números, objetos ou o clock, mostra uma prévia "
                                         "aproximada na hora; ao soltar, vem o render do POV-Ray"))
         self.a_previa3d.setChecked(True)
+        self.a_tex = self._acao(tr("Biblioteca de texturas"), self.mostrar_texturas, "F10", True,
+                                tr("Texturas prontas do POV-Ray com miniaturas: arraste uma até o objeto (F10)"))
         for acao, curto in ((self.a_eixos, tr("Eixos")), (self.a_quatro, tr("4 vistas")),
                             (self.a_copiar, tr("Copiar câmera")), (self.a_fixar, tr("Comparar")),
-                            (self.a_hist, tr("Histórico")), (self.a_mat, tr("Matrizes"))):
+                            (self.a_hist, tr("Histórico")), (self.a_mat, tr("Matrizes")),
+                            (self.a_tex, tr("Texturas"))):
             acao.setIconText(curto)  # texto mais curto na barra de ferramentas
         for a in (self.a_eixos, self.a_previa, self.a_previa3d, None, self.a_quatro, self.a_livre, self.a_copiar, None,
-                  self.a_fixar, self.a_hist, self.a_mat, None):
+                  self.a_fixar, self.a_hist, self.a_mat, self.a_tex, None):
             m.addSeparator() if a is None else m.addAction(a)
         m.addAction(self._acao(tr("Ajustar imagem à janela"), lambda: [v.ajustar() for v in self._visores()],
                                "Ctrl+0"))
@@ -349,6 +355,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         tb.addAction(self.a_fixar)
         tb.addAction(self.a_hist)
         tb.addAction(self.a_mat)
+        tb.addAction(self.a_tex)
         tb.addSeparator()
         self.bt_play = QToolButton(text="▶", toolTip=tr("Tocar animação (varia o clock de 0 a 1)"))
         self.bt_play.clicked.connect(self.tocar)
@@ -409,6 +416,9 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         if c.value("matrizes", "false") == "true":
             self.a_mat.setChecked(True)
             self.mostrar_matrizes(True)
+        if c.value("texturas", "false") == "true":
+            self.a_tex.setChecked(True)
+            self.mostrar_texturas(True)
         self._montar_recentes()
 
     def _guardar(self):
@@ -424,6 +434,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         c.setValue("previa", "true" if self.a_previa.isChecked() else "false")
         c.setValue("historico", "true" if self.a_hist.isChecked() else "false")
         c.setValue("matrizes", "true" if self.a_mat.isChecked() else "false")
+        c.setValue("texturas", "true" if self.a_tex.isChecked() else "false")
         c.setValue("previa3d", "true" if self.a_previa3d.isChecked() else "false")
         c.setValue("conv_matrizes", "aula" if self.rb_aula.isChecked() else "pov")
         c.setValue("sessao", [e.caminho for e in self._editores() if e.caminho])
@@ -657,6 +668,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         self._live_parar()
         self.cache.parar()
         self.fila.cancelar()
+        self.painel_tex.parar()
         if self._sel_tmp is not None:
             self._sel_tmp.cleanup()
             self._sel_tmp = None
@@ -860,7 +872,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         p.setStandardOutputFile(QProcess.nullDevice())
         p.finished.connect(lambda rc, _s, l=l: self._live_terminou(l, rc))
         self.live.append(l)
-        p.start("povray", self._args(fonte, png, max(80, w // 2), max(60, h // 2), q, False, self._clock()))
+        p.start(pov.EXECUTAVEL, self._args(fonte, png, max(80, w // 2), max(60, h // 2), q, False, self._clock()))
 
     def _live_terminou(self, l, rc):
         from PyQt5.QtGui import QPixmap
@@ -1153,7 +1165,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
             p.finished.connect(lambda rc, _s, i=i: self._um_terminou(i, rc))
             p.errorOccurred.connect(self._falhou)
             self.procs.append((p, png))
-            p.start("povray", self._args(fonte, png, w, h, q, aa, self._clock()))
+            p.start(pov.EXECUTAVEL, self._args(fonte, png, w, h, q, aa, self._clock()))
         if job != "previa":
             self.status.showMessage(tr("Renderizando {}").format(f"{w}×{h}") + (" " + tr("(4 vistas)") if quatro else "") + "…")
 
@@ -1292,7 +1304,7 @@ class Janela(InteracaoMixin, RecursosMixin, QMainWindow):
         p.setWorkingDirectory(trab)
         p.setProcessChannelMode(QProcess.MergedChannels)
         p.finished.connect(self._gif_terminou)
-        p.start("povray", args)
+        p.start(pov.EXECUTAVEL, args)
 
     def _gif_terminou(self, rc, _status):
         g = self.gif

@@ -1,9 +1,11 @@
 """Tudo que é específico do POV-Ray: vocabulário, includes, câmera, eixos, vistas, ajuda e modelos."""
-import glob, math, os, re
+import glob, math, os, re, shutil
 
 from .i18n import N_, tr, idioma
 
 BIBLIOTECA = sorted(glob.glob("/usr/share/povray-3*/include"))[-1:]
+# programa do POV-Ray (POVLIVE_POVRAY escolhe outro)
+EXECUTAVEL = os.environ.get("POVLIVE_POVRAY") or shutil.which("povray") or "povray"
 
 PALAVRAS = """camera light_source sphere box cylinder cone plane torus disc triangle smooth_triangle
 prism lathe sor superellipsoid blob height_field text union difference intersection

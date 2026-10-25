@@ -380,6 +380,33 @@ TEXTOS = {
     "Frente (olhando para +z)": "Front (looking toward +z)",
     "Topo (olhando para −y)": "Top (looking toward −y)",
     "Lado direito (olhando para −x)": "Right side (looking toward −x)",
+    # biblioteca de texturas
+    "biblioteca de texturas (duplo clique aplica; arraste até o objeto na imagem)":
+        "texture library (double-click applies; drag onto the object in the image)",
+    "Biblioteca de texturas": "Texture library",
+    "Texturas prontas do POV-Ray com miniaturas: arraste uma até o objeto (F10)":
+        "POV-Ray's ready-made textures with thumbnails: drag one onto an object (F10)",
+    "Texturas": "Textures",
+    "Todas": "All",
+    "Aplicar ao objeto do cursor": "Apply to the object at the cursor",
+    "Aplica a textura escolhida ao objeto onde está o cursor do editor (clique num objeto na imagem para pôr o cursor nele)":
+        "Applies the chosen texture to the object where the editor cursor is (click an object in the image to put the cursor on it)",
+    "Clique num objeto na imagem e dê duplo clique numa textura, ou arraste a textura até o objeto.":
+        "Click an object in the image and double-click a texture, or drag the texture onto the object.",
+    "Buscar textura…": "Search textures…",
+    "Solte a textura em cima de um objeto.": "Drop the texture on top of an object.",
+    "Ponha o cursor dentro de um objeto (ou clique nele na imagem) para aplicar a textura.":
+        "Put the cursor inside an object (or click it in the image) to apply the texture.",
+    "{} aplicada ao {} (Ctrl+Z desfaz)": "{} applied to the {} (Ctrl+Z undoes it)",
+    "Gerando miniaturas ({} faltam; só na primeira vez)…": "Generating thumbnails ({} to go; first time only)…",
+    "Metais": "Metals",
+    "Madeiras": "Woods",
+    "Pedras e mármores": "Stones and marbles",
+    "Vidros e água": "Glass and water",
+    "Céu e nuvens": "Sky and clouds",
+    "Outras": "Other",
+    "Acabamentos (finish)": "Finishes",
+    "Cores": "Colors",
 }
 
 # Insert menu templates whose code changes in English ("|" marks where the cursor goes)

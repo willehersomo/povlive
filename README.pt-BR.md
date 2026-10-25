@@ -7,7 +7,7 @@
 **PovLive** é um editor de cenas [POV-Ray](https://www.povray.org/) para Linux, com o código de um lado e a imagem do outro,
 renderizada enquanto você digita. Foi feito para estudar Computação Gráfica: além do preview ao vivo, ele
 mostra as **matrizes das transformações**, deixa **clicar e arrastar objetos na imagem**, tem **câmera livre
-com o mouse**, **quatro vistas**, um **guia com 33 exemplos** e **exercícios corrigidos automaticamente**.
+com o mouse**, **quatro vistas**, uma **biblioteca de texturas com miniaturas**, um **guia com 33 exemplos** e **exercícios corrigidos automaticamente**.
 
 ![Janela principal](docs/img/janela.png)
 
@@ -47,6 +47,13 @@ com o mouse**, **quatro vistas**, um **guia com 33 exemplos** e **exercícios co
 |---|---|---|
 | ![](docs/img/quatro_vistas.png) | ![](docs/img/matrizes.png) | ![](docs/img/exercicio.png) |
 
+**Biblioteca de texturas (F10)**: as texturas prontas que vêm com o POV-Ray (metais, madeiras, pedras, vidros,
+céus, acabamentos e cores, 434 ao todo), cada uma com miniatura. **Arraste uma textura até um objeto na imagem**
+(ou dê duplo clique nela com o cursor no objeto) e o código é atualizado, com o `#include` junto. As miniaturas são
+renderizadas uma vez, em segundo plano, e ficam guardadas.
+
+![Biblioteca de texturas](docs/img/texturas.png)
+
 **Editor**: destaque de sintaxe, autocompletar (inclusive nomes dos `#include`), ajuda ao passar o mouse, fechamento
 automático de `{ ( [ < "`, par de chaves destacado, comentar com Ctrl+/, buscar e substituir, formatar (Ctrl+Shift+F),
 seletor de cor ao vivo, modelos prontos (menu Inserir) e abas.
@@ -59,7 +66,7 @@ em alta, o GIF e um LEIAME com o comando para renderizar.
 **Pacote .deb** (Ubuntu, Debian, Pop!_OS, Mint) — baixe em [Releases](https://github.com/willehersomo/povlive/releases):
 
 ```bash
-sudo apt install ./povlive_3.2.0_all.deb    # instala também povray, PyQt5 e Pillow
+sudo apt install ./povlive_3.3.0_all.deb    # instala também povray, PyQt5 e Pillow
 povlive cena.pov
 ```
 
@@ -123,6 +130,7 @@ povlive_app/
   sdl.py                leitura do código POV-Ray: blocos, expressões, transformações
   matrizes.py           matrizes 4×4 nas duas convenções
   selecao.py            cores únicas por objeto (clique/arraste)
+  texturas.py, biblioteca.py  biblioteca de texturas (catálogo, aplicar no código, miniaturas, painel)
   i18n.py, traducoes_en.py  idioma da interface (textos em português no código, tradução inglesa à parte)
   pov.py, guia.py, guia_en.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
 tests/                  testes (pytest, Qt sem janela)
@@ -137,10 +145,11 @@ extras/povlive_web.py   primeira versão (editor no navegador)
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 140 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
+São 149 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
 tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia nos dois idiomas (nenhum pode dar erro
 ou aviso), os 7 exercícios (o gabarito passa e o código inicial não), a tradução (todo texto marcado tem versão em
-inglês e nenhum texto em português aparece na interface em inglês) e testes de integração que abrem o app, digitam, clicam e
+inglês e nenhum texto em português aparece na interface em inglês), a biblioteca de texturas (cada categoria
+renderiza sem aviso, arrastar uma textura até um objeto) e testes de integração que abrem o app, digitam, clicam e
 arrastam na imagem, exportam a entrega e conferem o histórico, além da prévia em OpenGL (a silhueta tem que coincidir com a do POV-Ray). O CI roda tudo em cada push e gera o `.deb`;
 numa tag `v*`, o `.deb` é publicado em Releases.
 

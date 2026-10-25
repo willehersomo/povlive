@@ -20,6 +20,7 @@ class Visor(QWidget):
     objeto = pyqtSignal(str, float, float, int)  # Ctrl+arrastar: ("inicio"|"mover"|"fim", x, y, modificadores)
     gizmo_sinal = pyqtSignal(str, str, float, float, int)  # (fase, alça "x"|"y"|"z"|"anel", dx, dy, modificadores)
     esc = pyqtSignal()
+    soltou_textura = pyqtSignal(float, float, str)   # textura arrastada da biblioteca: (x, y, chave)
 
     def __init__(self, titulo="", modo="normal"):
         super().__init__()
@@ -44,6 +45,7 @@ class Visor(QWidget):
         self.setMouseTracking(True)
         self.setMinimumSize(80, 60)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
+        self.setAcceptDrops(True)
 
     def sizeHint(self):
         return QSize(400, 300)
@@ -59,6 +61,25 @@ class Visor(QWidget):
         self.previa = previa
         self.warp = (1.0, 0.0, 0.0)
         self.update()
+
+    MIME_TEXTURA = "application/x-povlive-textura"
+
+    def dragEnterEvent(self, ev):
+        if self.pix is not None and ev.mimeData().hasFormat(self.MIME_TEXTURA):
+            ev.acceptProposedAction()
+
+    def dragMoveEvent(self, ev):
+        x, y = self._normalizado(ev.pos())
+        if 0 <= x <= 1 and 0 <= y <= 1:
+            ev.acceptProposedAction()
+        else:
+            ev.ignore()
+
+    def dropEvent(self, ev):
+        x, y = self._normalizado(ev.pos())
+        if 0 <= x <= 1 and 0 <= y <= 1 and ev.mimeData().hasFormat(self.MIME_TEXTURA):
+            ev.acceptProposedAction()
+            self.soltou_textura.emit(x, y, bytes(ev.mimeData().data(self.MIME_TEXTURA)).decode())
 
     def set_gizmo(self, g):
         self.gizmo = g

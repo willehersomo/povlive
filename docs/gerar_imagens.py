@@ -146,3 +146,34 @@ j.visor.gizmo_sinal.emit("fim", "x", 84, 0, 0)
 for x in j._editores():
     x.document().setModified(False)
 j.close()
+
+# biblioteca de texturas: arrasta Jade até o vaso
+j = J.Janela([os.path.join(AQUI, "vitrine_en.pov" if EN else "vitrine.pov")])
+j.resize(1500, 900)
+j.show()
+j.cb_t.setCurrentIndex(2)
+esperar(lambda: ok(j))
+j.a_tex.trigger()
+esperar(lambda: not j.painel_tex.gerador.rodando(), 300)
+p = j.painel_tex
+p.cb_cat.setCurrentIndex(p.cb_cat.findData("pedras"))
+p.lista.setCurrentItem(p.widgets[("textures.inc", "Jade")])
+esperar(lambda: j.sel is not None and j.sel["chave"] == j._sel_chave())
+img, mapa = j.sel["img"], j.sel["mapa"]
+alvo = None
+for i, b in mapa.items():
+    if b.kw == "lathe":
+        for y in range(0, img.height(), 3):
+            for x in range(0, img.width(), 3):
+                c = img.pixelColor(x, y)
+                if selecao.id_da_cor(c.red(), c.green(), c.blue()) == i and alvo is None:
+                    alvo = ((x + .5) / img.width(), (y + .5) / img.height() + 0.03)
+j.status.clearMessage()
+j.visor.soltou_textura.emit(alvo[0], alvo[1], "textures.inc\tJade")
+esperar(lambda: ok(j))
+e = j.cena
+e.centerCursor()
+salvar(j, "texturas.png")
+for x in j._editores():
+    x.document().setModified(False)
+j.close()

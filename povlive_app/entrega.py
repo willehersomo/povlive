@@ -65,7 +65,7 @@ class Exportador(QObject):
         p.setWorkingDirectory(self.trab)
         p.setProcessChannelMode(QProcess.MergedChannels)
         p.finished.connect(lambda rc, _s: depois(rc, bytes(p.readAll()).decode(errors="replace")))
-        p.start("povray", [f"+I{self.nome}", "-D", "-V", "+FN", f"+L{self.pasta}"] + extra)
+        p.start(pov.EXECUTAVEL, [f"+I{self.nome}", "-D", "-V", "+FN", f"+L{self.pasta}"] + extra)
 
     def _depois_png(self, rc, log):
         if rc != 0:

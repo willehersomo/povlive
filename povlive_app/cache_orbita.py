@@ -95,9 +95,9 @@ class CacheOrbita(QObject):
             proc.setStandardOutputFile(QProcess.nullDevice())
             proc.finished.connect(self._coletar)
             if nice:  # prioridade baixa: não atrapalha o resto do computador
-                proc.start(nice, ["-n", "10", "povray"] + a)
+                proc.start(nice, ["-n", "10", pov.EXECUTAVEL] + a)
             else:
-                proc.start("povray", a)
+                proc.start(pov.EXECUTAVEL, a)
             self.procs.append((proc, range(p * CHUNK + 1, (p + 1) * CHUNK + 1)))
         self.timer.start()
 
