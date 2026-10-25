@@ -1203,8 +1203,8 @@ class Janela(ArvoreMixin, TexturasMixin, InteracaoMixin, RecursosMixin, QMainWin
         for e in self._editores():
             if e is self.cena or not e.caminho or not e.document().isModified():
                 continue
-            rel = os.path.relpath(e.caminho, pasta)
-            if rel.startswith(".."):
+            rel = plataforma.relativo(e.caminho, pasta)
+            if not rel:
                 continue
             destino = os.path.join(trab, rel)
             os.makedirs(os.path.dirname(destino), exist_ok=True)
@@ -1521,6 +1521,7 @@ def autoteste(app):
     import tempfile
     pasta = tempfile.mkdtemp(prefix="povlive_autoteste_")
     # não mexe nas configurações, no histórico nem no cache do usuário
+    QSettings.setDefaultFormat(QSettings.IniFormat)      # no Windows o nativo é o registro
     for formato in (QSettings.NativeFormat, QSettings.IniFormat):
         QSettings.setPath(formato, QSettings.UserScope, os.path.join(pasta, "config"))
     for var in ("XDG_DATA_HOME", "XDG_CACHE_HOME", "LOCALAPPDATA"):

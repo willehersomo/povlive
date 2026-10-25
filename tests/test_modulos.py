@@ -23,7 +23,7 @@ def test_formatar_nao_mexe_em_comentario_de_bloco_nem_string():
 
 @precisa_povray
 def test_formatar_nao_muda_a_imagem(tmp_path):
-    texto = open(os.path.join(CENAS, "boneco.pov")).read()
+    texto = open(os.path.join(CENAS, "boneco.pov"), encoding="utf-8").read()
     import shutil
     shutil.copy(os.path.join(CENAS, "cor.inc"), tmp_path)
     a, _ = renderizar(texto, tmp_path)
@@ -43,7 +43,7 @@ def test_cor_e_id_ida_e_volta():
 def test_selecao_identifica_cada_objeto(tmp_path):
     import shutil
     shutil.copy(os.path.join(CENAS, "cor.inc"), tmp_path)
-    texto = open(os.path.join(CENAS, "boneco.pov")).read()
+    texto = open(os.path.join(CENAS, "boneco.pov"), encoding="utf-8").read()
     marcado, mapa = selecao.marcar(texto)
     img, _ = renderizar(marcado, tmp_path, 320, 240, ["+Q4"] + selecao.ARGS_EXTRA)
     ids = {selecao.id_da_cor(*map(int, img[y, x])) for y in range(0, 240, 2) for x in range(0, 320, 2)}
@@ -103,7 +103,7 @@ def test_correcoes_rapidas():
 
 @precisa_povray
 def test_avisos_de_verdade_do_povray(tmp_path):
-    _, saida = renderizar(open(os.path.join(CENAS, "legado.pov")).read(), tmp_path)
+    _, saida = renderizar(open(os.path.join(CENAS, "legado.pov"), encoding="utf-8").read(), tmp_path)
     tipos = {a["correcao"] for a in avisos.ler(saida)}
     assert {"gamma", "versao"} <= tipos
 

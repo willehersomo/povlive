@@ -133,7 +133,7 @@ def test_arrastar_textura_ate_o_objeto(qapp, tmp_path, monkeypatch):
         caixa = [b for b in sdl.blocos(novo) if b.kw == "box"][0]
         assert "texture { T_Wood10 }" in novo[caixa.abre:caixa.fecha] and "Blue" not in novo[caixa.abre:caixa.fecha]
         assert '#include "woods.inc"' in novo
-        assert esperar(qapp, lambda: ok(j))       # a cena nova renderiza sem erro
+        assert esperar(qapp, lambda: ok(j)), (j.status.currentMessage(), j.log.toPlainText())   # renderiza sem erro
         j.cena.undo()
         assert j.cena.toPlainText() == texto
         # duplo clique com o cursor no cone

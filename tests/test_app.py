@@ -121,8 +121,9 @@ def test_inc_alterado_sem_salvar_entra_no_render(janela, qapp, tmp_path):
     c = QTextCursor(inc.document())
     c.select(QTextCursor.Document)
     c.insertText("#declare CorNariz = color rgb <0, 0, 1>;\n")
-    assert esperar(qapp, lambda: ok(j) and azuis() > antes + 5), (antes, azuis())   # o nariz ficou azul
-    assert open(os.path.join(str(tmp_path), "cor.inc")).read().startswith("#declare CorNariz = color rgb <1")
+    assert esperar(qapp, lambda: ok(j) and azuis() > antes + 5), \
+        (antes, azuis(), j.status.currentMessage(), j.log.toPlainText())   # o nariz ficou azul
+    assert open(os.path.join(str(tmp_path), "cor.inc"), encoding="utf-8").read().startswith("#declare CorNariz = color rgb <1")
 
 
 def test_camera_livre_copiar_para_o_codigo(janela, qapp, tmp_path):

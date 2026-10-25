@@ -25,6 +25,10 @@ def home_temporario(tmp_path, monkeypatch):
     monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     (tmp_path / "home").mkdir()
     monkeypatch.delenv("POVLIVE_LANG", raising=False)
+    # configurações num .ini temporário (no Windows o formato nativo é o registro, que o setPath ignora)
+    from PyQt5.QtCore import QSettings
+    QSettings.setDefaultFormat(QSettings.IniFormat)
+    QSettings.setPath(QSettings.IniFormat, QSettings.UserScope, str(tmp_path / "home" / "config"))
     from povlive_app import i18n
     i18n.definir("pt")       # os testes rodam em português, salvo quando pedem outro idioma
     yield
@@ -62,7 +66,7 @@ def renderizar(texto, pasta, w=160, h=120, extra=()):
     from PIL import Image
     fonte = os.path.join(str(pasta), "t.pov")
     saida = os.path.join(str(pasta), "t.png")
-    with open(fonte, "w") as f:
+    with open(fonte, "w", encoding="utf-8") as f:
         f.write(texto)
     r = subprocess.run(pov.comando(["+It.pov", "+Ot.png", f"+W{w}", f"+H{h}", "-D", "-V"] + list(extra)),
                        cwd=str(pasta), capture_output=True, text=True)

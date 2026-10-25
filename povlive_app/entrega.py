@@ -3,7 +3,7 @@ import glob, os, re, shutil, tempfile, time, zipfile
 
 from PyQt5.QtCore import QObject, QProcess, pyqtSignal
 
-from . import pov
+from . import pov, plataforma
 from .i18n import tr, idioma
 
 
@@ -44,7 +44,10 @@ class Exportador(QObject):
         with open(os.path.join(self.trab, self.nome), "w", encoding="utf-8") as f:
             f.write(self.texto)
         for c, t in self.incs.items():
-            destino = os.path.join(self.trab, os.path.relpath(c, self.pasta))
+            rel = plataforma.relativo(c, self.pasta)
+            if not rel:
+                continue
+            destino = os.path.join(self.trab, rel)
             os.makedirs(os.path.dirname(destino), exist_ok=True)
             with open(destino, "w", encoding="utf-8") as f:
                 f.write(t)

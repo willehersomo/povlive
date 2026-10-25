@@ -38,3 +38,9 @@ def test_autoteste(tmp_path):
                        capture_output=True, text=True, timeout=180)
     assert r.returncode == 0, r.stdout + r.stderr
     assert (tmp_path / "log.txt").read_text(encoding="utf-8").startswith("autoteste: ok")
+
+
+def test_relativo(tmp_path):
+    assert PL.relativo(str(tmp_path / "a" / "b.inc"), str(tmp_path)) == os.path.join("a", "b.inc")
+    assert PL.relativo(str(tmp_path / "x.inc"), str(tmp_path / "a")) is None
+    assert PL.relativo(str(tmp_path), str(tmp_path / "a")) is None

@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QRadioBu
                              QListWidget, QListWidgetItem, QToolButton, QMessageBox, QDialog,
                              QFileDialog, QProgressDialog, QButtonGroup, QGridLayout, QPushButton)
 
-from . import pov, sdl, matrizes, selecao, formatador, avisos, exercicios
+from . import pov, sdl, matrizes, selecao, formatador, avisos, exercicios, plataforma
 from .fila import FilaRender
 from .entrega import Exportador
 from .i18n import tr
@@ -183,8 +183,8 @@ class RecursosMixin:
         for e in self._editores():
             if e is self.cena or not e.caminho or not e.document().isModified():
                 continue
-            rel = os.path.relpath(e.caminho, pasta)
-            if not rel.startswith(".."):
+            rel = plataforma.relativo(e.caminho, pasta)
+            if rel:
                 r[rel] = e.toPlainText()
         return r
 

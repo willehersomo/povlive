@@ -61,6 +61,15 @@ def biblioteca():
     return []
 
 
+def relativo(caminho, pasta):
+    """Caminho relativo à pasta, ou None se estiver fora dela (ou em outra unidade, no Windows)."""
+    try:
+        rel = os.path.relpath(caminho, pasta)
+    except ValueError:
+        return None
+    return None if rel == ".." or rel.startswith(".." + os.sep) else rel
+
+
 def caminho_pov(p):
     """Caminho no formato que o POV-Ray entende (o do Cygwin aceita C:/..., não barras invertidas)."""
     return p.replace("\\", "/") if WINDOWS else p
