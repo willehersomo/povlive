@@ -1,0 +1,2 @@
+"""POV-Ray ao vivo: editor de cenas com preview em tempo real."""
+__version__ = "3.0.0"
