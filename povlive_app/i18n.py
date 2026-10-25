@@ -30,8 +30,8 @@ def carregar(cfg=None):
     if os.environ.get("POVLIVE_LANG"):
         return definir(os.environ["POVLIVE_LANG"])
     if cfg is None:
-        from PyQt5.QtCore import QSettings
-        cfg = QSettings("povlive", "povlive")
+        from .plataforma import configuracoes
+        cfg = configuracoes()
     definir(cfg.value("idioma", "") or do_sistema())
 
 

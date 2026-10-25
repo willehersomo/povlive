@@ -89,6 +89,14 @@ def argumentos(args, biblioteca_=None):
     return saida
 
 
+def configuracoes():
+    """As preferências do app. No Windows ficam num .ini (%APPDATA%\\povlive) em vez do registro: assim
+    dá para apontar para outra pasta (testes, --autoteste) com QSettings.setPath."""
+    from PyQt5.QtCore import QSettings
+    formato = QSettings.IniFormat if WINDOWS else QSettings.NativeFormat
+    return QSettings(formato, QSettings.UserScope, "povlive", "povlive")
+
+
 def nice():
     """Programa para baixar a prioridade de renders em segundo plano (só no Linux)."""
     return None if WINDOWS else shutil.which("nice")

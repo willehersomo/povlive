@@ -80,7 +80,7 @@ def atalhos_html():
 class Janela(ArvoreMixin, TexturasMixin, InteracaoMixin, RecursosMixin, QMainWindow):
     def __init__(self, arquivos=()):
         super().__init__()
-        self.cfg = QSettings("povlive", "povlive")
+        self.cfg = plataforma.configuracoes()
         self.cena = None          # editor da cena que está sendo renderizada (.pov)
         self.procs = []           # processos do render atual (1, ou 4 nas quatro vistas)
         self.job = None           # "previa", "final" ou "grande"
@@ -1182,13 +1182,14 @@ class Janela(ArvoreMixin, TexturasMixin, InteracaoMixin, RecursosMixin, QMainWin
         return any(p.state() != QProcess.NotRunning for p, _ in self.procs)
 
     def _parar(self):
-        self._esconder_progresso()
-        for p, _ in self.procs:
+        # esvazia a lista antes: o waitForFinished ainda entrega saída pendente (progresso) ao _ler_progresso
+        procs, self.procs = self.procs, []
+        for p, _ in procs:
             if p.state() != QProcess.NotRunning:
                 p.finished.disconnect()
                 p.kill()
                 p.waitForFinished(1000)
-        self.procs = []
+        self._esconder_progresso()
         self._limpar_trab()
 
     def _limpar_trab(self):
@@ -1521,7 +1522,6 @@ def autoteste(app):
     import tempfile
     pasta = tempfile.mkdtemp(prefix="povlive_autoteste_")
     # não mexe nas configurações, no histórico nem no cache do usuário
-    QSettings.setDefaultFormat(QSettings.IniFormat)      # no Windows o nativo é o registro
     for formato in (QSettings.NativeFormat, QSettings.IniFormat):
         QSettings.setPath(formato, QSettings.UserScope, os.path.join(pasta, "config"))
     for var in ("XDG_DATA_HOME", "XDG_CACHE_HOME", "LOCALAPPDATA"):
