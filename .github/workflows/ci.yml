@@ -38,8 +38,34 @@ jobs:
           name: povlive-deb
           path: dist/*.deb
 
-  release:
+  appimage:
     needs: testes
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Dependências para compilar o POV-Ray
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends g++ make autoconf automake patchelf libfuse2 \
+            libboost-thread-dev libboost-system-dev libboost-date-time-dev \
+            libpng-dev libjpeg-dev libtiff-dev zlib1g-dev \
+            libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
+      - name: Montar o AppImage
+        run: ./empacotamento/appimage/montar.sh dist
+      - name: Autoteste do AppImage
+        env:
+          QT_QPA_PLATFORM: offscreen
+          POVLIVE_AUTOTESTE_LOG: ${{ github.workspace }}/autoteste.txt
+        run: |
+          ./dist/PovLive-*-x86_64.AppImage --appimage-extract-and-run --autoteste
+          cat autoteste.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: povlive-appimage
+          path: dist/*.AppImage
+
+  release:
+    needs: [testes, appimage]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-22.04
     permissions:
@@ -49,7 +75,13 @@ jobs:
         with:
           name: povlive-deb
           path: dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: povlive-appimage
+          path: dist
       - uses: softprops/action-gh-release@v3
         with:
-          files: dist/*.deb
+          files: |
+            dist/*.deb
+            dist/*.AppImage
           generate_release_notes: true
