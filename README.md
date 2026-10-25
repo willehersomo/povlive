@@ -4,7 +4,7 @@
 
 **English** · [Português](README.pt-BR.md)
 
-**PovLive** is a [POV-Ray](https://www.povray.org/) scene editor for Linux, with the code on one side and the image
+**PovLive** is a [POV-Ray](https://www.povray.org/) scene editor for Linux and Windows, with the code on one side and the image
 on the other, rendered as you type. It was made for learning Computer Graphics: besides the live preview, it
 shows the **transformation matrices**, lets you **click and drag objects in the image**, has a **free camera
 controlled by the mouse**, **four views**, a **texture library with thumbnails**, a **guide with
@@ -47,6 +47,9 @@ The interface is available in English and Portuguese.
   animation — and 33 examples that open in a tab with one click.
 - **Exercises** with answer keys: the app renders your answer and the answer key, compares the images and shows
   the difference.
+- **2D transformations practice** (Help menu): exam-style questions (translate, scale, rotate, reflect, rotate
+  about a point) on a figure; type the final 3×3 matrix and the transformed points and the app grades them, plots
+  your answer and shows the step-by-step solution. Each question has a number, so classmates can do the same one.
 
 | Four views | Matrices | Exercise |
 |---|---|---|
@@ -61,20 +64,32 @@ rendered once, in the background, and cached.
 
 **Editor**: syntax highlighting, autocomplete (including names from `#include` files), help on hover, automatic
 closing of `{ ( [ < "`, matching brace highlight, comment with Ctrl+/, find and replace, format (Ctrl+Shift+F),
-live color picker, ready-made templates (Insert menu) and tabs.
+live color picker, ready-made templates (Insert menu) and tabs. **Go to definition** (F12 or Ctrl+click a name,
+also inside `.inc` files), **rename** a name in the whole file (F2) and a **scene tree** (F4) with the objects as a
+hierarchy (CSG, `#declare`, loops): click one to go to its code and see it highlighted in the image.
 
 **Output**: PNG, animated GIF (using the `clock` variable) and **export submission** — a `.zip` with the scene,
-the `.inc` files, a high-resolution image, the GIF and a README with the command to render it.
+the `.inc` files, a high-resolution image, the GIF and a README with the command to render it. Large renders show
+progress and time left, and can be canceled. **Import OBJ/STL** models: they become a `mesh2` in an `.inc` next to
+the scene (axes converted to POV-Ray's), and also show up in the instant preview.
 
 ## Install
 
-**.deb package** (Ubuntu, Debian, Pop!_OS, Mint) — download it from
-[Releases](https://github.com/willehersomo/povlive/releases):
+Download from [Releases](https://github.com/willehersomo/povlive/releases):
 
-```bash
-sudo apt install ./povlive_3.4.0_all.deb    # also installs povray, PyQt5 and Pillow
-povlive scene.pov
-```
+- **Windows**: `PovLive-3.5.0-setup.exe` (installer) or `PovLive-3.5.0-windows.zip` (portable). POV-Ray comes
+  inside, nothing else to install.
+- **Any Linux**: `PovLive-3.5.0-x86_64.AppImage` — make it executable and run it (POV-Ray comes inside):
+
+  ```bash
+  chmod +x PovLive-3.5.0-x86_64.AppImage && ./PovLive-3.5.0-x86_64.AppImage scene.pov
+  ```
+- **Ubuntu, Debian, Pop!_OS, Mint**: the `.deb` package, which uses the system's POV-Ray:
+
+  ```bash
+  sudo apt install ./povlive_3.5.0_all.deb    # also installs povray, PyQt5 and Pillow
+  povlive scene.pov
+  ```
 
 **From source**:
 
@@ -151,10 +166,14 @@ povlive_app/
   matrizes.py           4×4 matrices in both conventions
   selecao.py            unique colors per object (click/drag)
   texturas.py, biblioteca.py  texture library (catalog, applying to the code, thumbnails, panel)
+  arvore.py, navegar.py  scene tree, go to definition, rename
+  importar.py           OBJ/STL import
+  treino2d.py, treino2d_ui.py  2D transformations practice
+  plataforma.py         Linux/Windows differences (POV-Ray program, paths, folders)
   i18n.py, traducoes_en.py  interface language
   pov.py, guia.py, guia_en.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
 tests/                  tests (pytest, headless Qt)
-empacotamento/          .deb script, icon and desktop entry
+empacotamento/          .deb, AppImage and Windows (POV-Ray compiled with Cygwin, PyInstaller, Inno Setup)
 docs/                   screenshots and the script that generates them
 extras/povlive_web.py   first version (editor in the browser)
 ```
@@ -168,13 +187,15 @@ this README and the guide are available in English.
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-There are 151 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
+There are 180 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
 formatting must be identical), selection by color, warnings, the 33 guide examples in both languages (none may
 produce an error or warning), the 7 exercises (the answer key passes and the starting code does not), the
 translation, the texture library (every category renders without warnings, dragging a texture onto an object),
-integration tests that open the app, type, click and drag on the image, export a submission and
-check the history, and the OpenGL preview (its silhouette must match POV-Ray's). CI runs everything on every
-push and builds the `.deb`; on a `v*` tag, the `.deb` is published in Releases.
+the editor, the scene tree, go to definition and rename, OBJ/STL import, the 2D practice (the course convention and
+the grading), integration tests that open the app, type, click and drag on the image, export a submission and
+check the history, and the OpenGL preview (its silhouette, CSG included, must match POV-Ray's). CI runs everything
+on Linux and Windows, measures coverage (at least 70%) and builds the `.deb`, the AppImage and the Windows
+installer; on a `v*` tag, everything is published in Releases. See also [CONTRIBUTING.md](CONTRIBUTING.md).
 
 To regenerate the screenshots: `POVLIVE_LANG=en python3 docs/gerar_imagens.py` (English, `docs/img/en`) and
 `POVLIVE_LANG=pt python3 docs/gerar_imagens.py` (Portuguese, `docs/img`).

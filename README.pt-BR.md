@@ -4,7 +4,7 @@
 
 [English](README.md) · **Português**
 
-**PovLive** é um editor de cenas [POV-Ray](https://www.povray.org/) para Linux, com o código de um lado e a imagem do outro,
+**PovLive** é um editor de cenas [POV-Ray](https://www.povray.org/) para Linux e Windows, com o código de um lado e a imagem do outro,
 renderizada enquanto você digita. Foi feito para estudar Computação Gráfica: além do preview ao vivo, ele
 mostra as **matrizes das transformações**, deixa **clicar e arrastar objetos na imagem**, tem **câmera livre
 com o mouse**, **quatro vistas**, uma **biblioteca de texturas com miniaturas**, um **guia com 33 exemplos** e **exercícios corrigidos automaticamente**.
@@ -42,6 +42,10 @@ com o mouse**, **quatro vistas**, uma **biblioteca de texturas com miniaturas**,
 - **Guia (F1)** com 12 tópicos — sólidos, transformações, ordem das transformações, CSG, laços, texturas, animação —
   e 33 exemplos que abrem numa aba com um clique.
 - **Exercícios** com gabarito: o app renderiza a sua resposta e o gabarito, compara as imagens e mostra a diferença.
+- **Treino de transformações 2D** (menu Ajuda): questões como as da prova (translação, escala, `M_r` horária,
+  `M_rah`, `M_fx`, `M_fy`, rotação e escala em torno de um ponto) sobre uma figura, como a A(1,1) B(2,1) C(2,2) D(1,4)
+  da aula. Você digita a matriz 3×3 final e os pontos; o app corrige, desenha a sua resposta e mostra a solução passo
+  a passo. Cada questão tem um número, então dá para fazer a mesma que um colega.
 
 | Quatro vistas | Matrizes | Exercício |
 |---|---|---|
@@ -56,19 +60,32 @@ renderizadas uma vez, em segundo plano, e ficam guardadas.
 
 **Editor**: destaque de sintaxe, autocompletar (inclusive nomes dos `#include`), ajuda ao passar o mouse, fechamento
 automático de `{ ( [ < "`, par de chaves destacado, comentar com Ctrl+/, buscar e substituir, formatar (Ctrl+Shift+F),
-seletor de cor ao vivo, modelos prontos (menu Inserir) e abas.
+seletor de cor ao vivo, modelos prontos (menu Inserir) e abas. **Ir para a definição** (F12 ou Ctrl+clique num
+nome, também dentro de `.inc`), **renomear** um nome no arquivo inteiro (F2) e a **árvore da cena** (F4), com os
+objetos em hierarquia (CSG, `#declare`, laços): clicar num deles leva ao código e destaca o objeto na imagem.
 
 **Saída**: PNG, GIF da animação (variável `clock`) e **exportar entrega** — um `.zip` com a cena, os `.inc`, a imagem
-em alta, o GIF e um LEIAME com o comando para renderizar.
+em alta, o GIF e um LEIAME com o comando para renderizar. Renders grandes mostram o progresso e o tempo que falta, e
+podem ser cancelados. **Importar modelos OBJ/STL**: viram um `mesh2` num `.inc` ao lado da cena (com os eixos
+convertidos para os do POV-Ray) e aparecem também na prévia instantânea.
 
 ## Instalar
 
-**Pacote .deb** (Ubuntu, Debian, Pop!_OS, Mint) — baixe em [Releases](https://github.com/willehersomo/povlive/releases):
+Baixe em [Releases](https://github.com/willehersomo/povlive/releases):
 
-```bash
-sudo apt install ./povlive_3.4.0_all.deb    # instala também povray, PyQt5 e Pillow
-povlive cena.pov
-```
+- **Windows**: `PovLive-3.5.0-setup.exe` (instalador) ou `PovLive-3.5.0-windows.zip` (portátil). O POV-Ray vem
+  junto, não precisa instalar mais nada.
+- **Qualquer Linux**: `PovLive-3.5.0-x86_64.AppImage` — dê permissão de execução e rode (o POV-Ray vem junto):
+
+  ```bash
+  chmod +x PovLive-3.5.0-x86_64.AppImage && ./PovLive-3.5.0-x86_64.AppImage cena.pov
+  ```
+- **Ubuntu, Debian, Pop!_OS, Mint**: o pacote `.deb`, que usa o POV-Ray do sistema:
+
+  ```bash
+  sudo apt install ./povlive_3.5.0_all.deb    # instala também povray, PyQt5 e Pillow
+  povlive cena.pov
+  ```
 
 **Direto do código**:
 
@@ -137,10 +154,14 @@ povlive_app/
   matrizes.py           matrizes 4×4 nas duas convenções
   selecao.py            cores únicas por objeto (clique/arraste)
   texturas.py, biblioteca.py  biblioteca de texturas (catálogo, aplicar no código, miniaturas, painel)
+  arvore.py, navegar.py  árvore da cena, ir para a definição, renomear
+  importar.py           importar OBJ/STL
+  treino2d.py, treino2d_ui.py  treino de transformações 2D
+  plataforma.py         diferenças entre Linux e Windows (programa do POV-Ray, caminhos, pastas)
   i18n.py, traducoes_en.py  idioma da interface (textos em português no código, tradução inglesa à parte)
   pov.py, guia.py, guia_en.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
 tests/                  testes (pytest, Qt sem janela)
-empacotamento/          script do .deb, ícone e atalho
+empacotamento/          .deb, AppImage e Windows (POV-Ray compilado com o Cygwin, PyInstaller, Inno Setup)
 docs/                   prints e o script que gera eles
 extras/povlive_web.py   primeira versão (editor no navegador)
 ```
@@ -151,13 +172,16 @@ extras/povlive_web.py   primeira versão (editor no navegador)
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 151 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
+São 180 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
 tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia nos dois idiomas (nenhum pode dar erro
 ou aviso), os 7 exercícios (o gabarito passa e o código inicial não), a tradução (todo texto marcado tem versão em
 inglês e nenhum texto em português aparece na interface em inglês), a biblioteca de texturas (cada categoria
-renderiza sem aviso, arrastar uma textura até um objeto) e testes de integração que abrem o app, digitam, clicam e
-arrastam na imagem, exportam a entrega e conferem o histórico, além da prévia em OpenGL (a silhueta tem que coincidir com a do POV-Ray). O CI roda tudo em cada push e gera o `.deb`;
-numa tag `v*`, o `.deb` é publicado em Releases.
+renderiza sem aviso, arrastar uma textura até um objeto), o editor, a árvore da cena, ir para a definição e
+renomear, importar OBJ/STL, o treino 2D (a convenção da aula e a correção), testes de integração que abrem o app,
+digitam, clicam e arrastam na imagem, exportam a entrega e conferem o histórico, e a prévia em OpenGL (a silhueta,
+inclusive com CSG, tem que coincidir com a do POV-Ray). O CI roda tudo no Linux e no Windows, mede a cobertura
+(mínimo de 70%) e gera o `.deb`, o AppImage e o instalador do Windows; numa tag `v*`, tudo é publicado em
+Releases. Veja também o [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Para regerar os prints: `POVLIVE_LANG=pt python3 docs/gerar_imagens.py` (em português, `docs/img`) e
 `POVLIVE_LANG=en python3 docs/gerar_imagens.py` (em inglês, `docs/img/en`).

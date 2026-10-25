@@ -17,11 +17,15 @@ grep -q "Cygwin detected, but not" vfe/unix/syspovconfig.h && { echo "o patch do
 cd unix
 ./prebuild.sh
 cd ..
+# --disable-optimiz: o configure ligaria -ffast-math, e com ele os GCC novos tratam "x != HUGE_VAL" como
+# sempre verdadeiro; o POV-Ray usa isso para "ângulo da câmera não informado" e passa a recusar qualquer
+# câmera ("Viewing angle has to be smaller than 180"). Também evita otimizar para o processador da máquina
+# que compila (o binário roda em qualquer x86-64). As otimizações ficam por conta do -O2 do CXXFLAGS.
 # No Windows, com a cygwin1.dll junto, a raiz "/" do Cygwin é a pasta acima de bin/. Por isso os caminhos
 # são /bin, /share e /etc: o povray.exe acha sozinho os includes e o povray.ini dentro da pasta povray/.
 ./configure COMPILED_BY="PovLive <https://github.com/willehersomo/povlive>" --prefix=/opt/povray \
     --bindir=/bin --datadir=/share --sysconfdir=/etc --mandir=/share/man --docdir=/share/doc \
-    --disable-io-restrictions --without-x --without-openexr --without-libsdl --with-boost-thread=boost_thread \
+    --disable-optimiz --disable-io-restrictions --without-x --without-openexr --without-libsdl --with-boost-thread=boost_thread \
     CXXFLAGS="-O2 -std=gnu++11 -w" LIBS="-lboost_system"
 make -j"$(nproc)"
 make install DESTDIR="$TRAB/inst"
