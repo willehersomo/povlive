@@ -445,6 +445,26 @@ TEXTOS = {
     "Não consegui ler o modelo ({}).": "Could not read the model ({}).",
     "modelo importado de {}": "model imported from {}",
     "{} importado: {} triângulos em {}": "{} imported: {} triangles in {}",
+    # treino de transformações 2D
+    "Treino de transformações 2D…": "2D transformations practice…",
+    "Questões de matriz à mão, como na prova, com correção e solução": "Matrix questions by hand, like in an exam, with grading and solution",
+    "Fácil (1–2 transformações)": "Easy (1–2 transformations)",
+    "Médio (2–3)": "Medium (2–3)",
+    "Difícil (3–4, em torno de pontos)": "Hard (3–4, about points)",
+    "Treino de transformações 2D": "2D transformations practice",
+    "Cada número gera sempre a mesma questão: dá para combinar com os colegas": "Each number always generates the same question, so classmates can share one",
+    "Nova questão": "New question",
+    "Aceita 0,866 · -1/2 · √3/2 · sqrt(2)/2 · cos(30)": "Accepts 0.866 · -1/2 · √3/2 · sqrt(2)/2 · cos(30)",
+    "Conferir": "Check",
+    "Mostrar solução": "Show solution",
+    "Nível": "Level",
+    "Questão nº": "Question #",
+    "Pontos transformados": "Transformed points",
+    "resposta certa (depois de conferir)": "correct answer (after checking)",
+    "Tudo certo!": "All correct!",
+    "sua resposta": "your answer",
+    "Matriz: {}/9 certos · pontos: {}/{} certos": "Matrix: {}/9 correct · points: {}/{} correct",
+    "figura original": "original figure",
 }
 
 # Insert menu templates whose code changes in English ("|" marks where the cursor goes)

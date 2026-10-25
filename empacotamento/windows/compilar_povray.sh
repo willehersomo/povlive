@@ -17,17 +17,21 @@ grep -q "Cygwin detected, but not" vfe/unix/syspovconfig.h && { echo "o patch do
 cd unix
 ./prebuild.sh
 cd ..
+# No Windows, com a cygwin1.dll junto, a raiz "/" do Cygwin é a pasta acima de bin/. Por isso os caminhos
+# são /bin, /share e /etc: o povray.exe acha sozinho os includes e o povray.ini dentro da pasta povray/.
 ./configure COMPILED_BY="PovLive <https://github.com/willehersomo/povlive>" --prefix=/opt/povray \
-    --disable-io-restrictions --without-x --without-openexr --with-boost-thread=boost_thread \
+    --bindir=/bin --datadir=/share --sysconfdir=/etc --mandir=/share/man --docdir=/share/doc \
+    --disable-io-restrictions --without-x --without-openexr --without-libsdl --with-boost-thread=boost_thread \
     CXXFLAGS="-O2 -std=gnu++11 -w" LIBS="-lboost_system"
 make -j"$(nproc)"
-make install
+make install DESTDIR="$TRAB/inst"
 
-mkdir -p "$DESTINO/bin" "$DESTINO/share/povray-3.7" "$DESTINO/licencas"
-cp /opt/povray/bin/povray.exe "$DESTINO/bin/"
-cp -r /opt/povray/share/povray-3.7/include "$DESTINO/share/povray-3.7/"
+mkdir -p "$DESTINO/bin" "$DESTINO/share/povray-3.7" "$DESTINO/etc/povray/3.7" "$DESTINO/tmp" "$DESTINO/licencas"
+cp "$TRAB/inst/bin/povray.exe" "$DESTINO/bin/"
+cp -r "$TRAB/inst/share/povray-3.7/include" "$DESTINO/share/povray-3.7/"
+cp "$TRAB/inst/etc/povray/3.7/povray.conf" "$TRAB/inst/etc/povray/3.7/povray.ini" "$DESTINO/etc/povray/3.7/"
 # DLLs do Cygwin que o povray.exe usa (cygwin1.dll, boost, png, jpeg, tiff, zlib...)
-ldd /opt/povray/bin/povray.exe | awk '$3 ~ /^\/usr\/bin\// {print $3}' | sort -u | while read -r dll; do
+ldd "$DESTINO/bin/povray.exe" | awk '$3 ~ /^\/usr\/bin\// {print $3}' | sort -u | while read -r dll; do
     cp "$dll" "$DESTINO/bin/"
 done
 cp LICENSE "$DESTINO/licencas/POV-Ray-AGPL-3.0.txt"

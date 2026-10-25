@@ -305,6 +305,8 @@ class Janela(ArvoreMixin, TexturasMixin, InteracaoMixin, RecursosMixin, QMainWin
         m.addAction(self._acao(tr("Guia do POV-Ray…"), self.abrir_guia, "F1"))
         m.addAction(self._acao(tr("Exercícios…"), lambda: self.abrir_guia(exercicios=True)))
         m.addAction(self._acao(tr("Verificar exercício"), self.verificar_exercicio, "Ctrl+Shift+V"))
+        m.addAction(self._acao(tr("Treino de transformações 2D…"), self.abrir_treino2d,
+                               dica=tr("Questões de matriz à mão, como na prova, com correção e solução")))
         m.addAction(self._acao(tr("Atalhos do app"),
                                lambda: QMessageBox.information(self, tr("Atalhos"), atalhos_html()), "Shift+F1"))
         m.addSeparator()
@@ -712,6 +714,11 @@ class Janela(ArvoreMixin, TexturasMixin, InteracaoMixin, RecursosMixin, QMainWin
                                     e.textCursor().blockNumber() + 1, 1, e.blockCount())
         if ok:
             e.ir_para(n)
+
+    def abrir_treino2d(self):
+        from .treino2d_ui import Treino2D
+        self.treino = Treino2D(self)
+        self.treino.show()
 
     def importar_modelo(self):
         from . import importar, texturas

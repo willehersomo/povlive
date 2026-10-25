@@ -50,11 +50,11 @@ jobs:
         run: python -m pip install PyQt5 numpy pillow PyOpenGL pytest pyinstaller
 
       - name: POV-Ray funciona
+        working-directory: tests/cenas
         run: |
-          povray\bin\povray.exe --version
-          Set-Content -Path t.pov -Value '#include "colors.inc" sphere { 0, 1 pigment { Red } } camera { location -3*z look_at 0 } light_source { <2,4,-3> rgb 1 }'
-          povray\bin\povray.exe +It.pov +Ot.png +W64 +H48 -D +Lpovray/share/povray-3.7/include
-          if (!(Test-Path t.png)) { exit 1 }
+          ..\..\povray\bin\povray.exe --version
+          ..\..\povray\bin\povray.exe +Iboneco.pov +O../../t.png +W64 +H48 -D
+          if (!(Test-Path ../../t.png)) { exit 1 }
 
       - name: Testes
         env:
