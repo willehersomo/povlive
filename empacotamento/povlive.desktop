@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=POV-Ray ao vivo
+Comment=Editor de cenas POV-Ray com preview em tempo real
+Exec=povlive %F
+Icon=povlive
+Terminal=false
+Categories=Graphics;
+MimeType=text/x-povray;
+Keywords=povray;raytracing;3d;
