@@ -31,11 +31,12 @@ make -j"$(nproc)"
 make install DESTDIR="$TRAB/inst"
 
 mkdir -p "$DESTINO/bin" "$DESTINO/share/povray-3.7" "$DESTINO/etc/povray/3.7" "$DESTINO/tmp" "$DESTINO/licencas"
-cp "$TRAB/inst/bin/povray.exe" "$DESTINO/bin/"
+EXE=povray; [ -f "$TRAB/inst/bin/povray.exe" ] && EXE=povray.exe     # .exe no Cygwin
+cp "$TRAB/inst/bin/$EXE" "$DESTINO/bin/"
 cp -r "$TRAB/inst/share/povray-3.7/include" "$DESTINO/share/povray-3.7/"
 cp "$TRAB/inst/etc/povray/3.7/povray.conf" "$TRAB/inst/etc/povray/3.7/povray.ini" "$DESTINO/etc/povray/3.7/"
 # DLLs do Cygwin que o povray.exe usa (cygwin1.dll, boost, png, jpeg, tiff, zlib...)
-ldd "$DESTINO/bin/povray.exe" | awk '$3 ~ /^\/usr\/bin\// {print $3}' | sort -u | while read -r dll; do
+ldd "$DESTINO/bin/$EXE" | awk '$3 ~ /^\/usr\/bin\// {print $3}' | sort -u | while read -r dll; do
     cp "$dll" "$DESTINO/bin/"
 done
 cp LICENSE "$DESTINO/licencas/POV-Ray-AGPL-3.0.txt"
@@ -49,5 +50,5 @@ As outras DLLs vêm dos pacotes do Cygwin (boost, libpng, libjpeg, libtiff, zlib
 https://cygwin.com/packages/. O script que gera esta pasta está em
 https://github.com/willehersomo/povlive/blob/main/empacotamento/windows/compilar_povray.sh
 TXT
-"$DESTINO/bin/povray.exe" --version 2>&1 | head -3 || true
+"$DESTINO/bin/$EXE" --version 2>&1 | head -3 || true
 ls -la "$DESTINO/bin"
