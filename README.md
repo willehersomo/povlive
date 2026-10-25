@@ -57,7 +57,7 @@ povlive cena.pov
 **Direto do código**:
 
 ```bash
-sudo apt install povray python3-pyqt5 python3-pil python3-numpy
+sudo apt install povray povray-includes python3-pyqt5 python3-pil python3-numpy
 git clone https://github.com/willehersomo/povlive.git
 python3 povlive/povlive.py cena.pov
 ```

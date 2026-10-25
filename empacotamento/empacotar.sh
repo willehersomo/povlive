@@ -25,7 +25,7 @@ Package: povlive
 Version: $VERSAO
 Architecture: all
 Maintainer: Breno Wille <brenowille23@gmail.com>
-Depends: python3 (>= 3.8), python3-pyqt5, povray, python3-pil, python3-numpy
+Depends: python3 (>= 3.8), python3-pyqt5, povray, povray-includes, python3-pil, python3-numpy
 Section: graphics
 Priority: optional
 Description: PovLive - editor de cenas POV-Ray com preview em tempo real

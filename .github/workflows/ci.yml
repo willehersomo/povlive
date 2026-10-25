@@ -16,7 +16,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            povray python3-pyqt5 python3-pil python3-numpy python3-pytest \
+            povray povray-includes python3-pyqt5 python3-pil python3-numpy python3-pytest \
             fakeroot dpkg-dev fonts-dejavu-core
 
       - name: Testes
