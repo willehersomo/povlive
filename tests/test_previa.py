@@ -59,10 +59,36 @@ def test_camera_com_rotate_e_ortografica():
     assert c.camera["orto"] == 3
 
 
-def test_difference_mostra_a_primeira_peca():
+def test_difference_e_intersection_recortam():
+    from povlive_app import csg
+    # caixa menos esfera grande: sobram só os cantos (nenhum ponto perto do centro das faces)
     c = P.interpretar("difference { box { -1, 1 } sphere { 0, 1.3 } }")
-    lo, hi = caixa_limites(c)
-    assert np.allclose(lo, -1) and np.allclose(hi, 1)
+    pts = np.concatenate([p.tris.reshape(-1, 3) for p in c.pecas])
+    assert np.all(np.linalg.norm(pts, axis=1) >= 1.27)     # a esfera de triângulos fica um pouco para dentro
+    assert {round(float(v), 3) for v in pts.max(0)} == {1.0}
+    # meia esfera: nada acima do plano, e a tampa plana aparece
+    c = P.interpretar("intersection { sphere { 0, 1 } plane { y, 0.25 } }")
+    pts = np.concatenate([p.tris.reshape(-1, 3) for p in c.pecas])
+    assert pts[:, 1].max() <= 0.25 + 1e-6 and np.isclose(pts[:, 1].min(), -1, atol=0.01)
+    tampa = [p for p in c.pecas if np.allclose(p.tris[:, :, 1], 0.25)]
+    assert tampa and tampa[0].xadrez is None
+    # sólido do resultado (para CSG dentro de CSG) com as transformações
+    c = P.interpretar("difference { box { -1, 1 } cylinder { -2*x, 2*x, 0.5 } translate <5, 0, 0> }")
+    s = c.pecas[0].solido
+    assert list(s.dentro(np.array([[5.0, 0, 0], [5.0, 0.9, 0.9], [0.0, 0, 0]]))) == [False, True, False]
+    assert csg.prisma(0, 1, [(0, 0), (1, 0), (0, 1)]).dentro(np.array([[0.2, 0.5, 0.2], [0.8, 0.5, 0.8]])).tolist() \
+        == [True, False]
+
+
+def test_recorte_do_csg_fica_guardado():
+    t = "difference { box { -1, 1 } sphere { 0, R } translate <X, 0, 0> }"
+    P._cache_csg.clear()
+    P.interpretar("#declare R = 1.2; #declare X = 0;" + t)
+    assert len(P._cache_csg) == 1
+    P.interpretar("#declare R = 1.2; #declare X = 3;" + t)      # só moveu: reaproveita
+    assert len(P._cache_csg) == 1
+    P.interpretar("#declare R = 1.3; #declare X = 3;" + t)      # mudou o furo: recorta de novo
+    assert len(P._cache_csg) == 2
 
 
 def test_projetar_centro_da_tela():
@@ -99,6 +125,33 @@ sphere { <-1, 1, 0>, 0.8 pigment { rgb <1, 0, 0> } finish { ambient 1 diffuse 0 
 box { <0.5, 0, -0.5>, <1.5, 1.6, 0.5> pigment { rgb <0, 0, 1> } finish { ambient 1 diffuse 0 } rotate <0, 30, 0> }
 cone { <0, 0, 2>, 0.6, <0, 2, 2>, 0 pigment { rgb <0, 1, 0> } finish { ambient 1 diffuse 0 } }
 """
+    assert _iou(renderizador, texto, tmp_path) > 0.93
+
+
+@precisa_povray
+def test_silhueta_do_csg_bate_com_o_povray(renderizador, tmp_path):
+    texto = """#version 3.7;
+global_settings { assumed_gamma 1.0 }
+camera { location <1, 3, -6> look_at <0, 0.5, 0> angle 60 }
+light_source { <3, 5, -4> rgb 1 }
+#declare F = finish { ambient 1 diffuse 0 };
+difference {
+  intersection { box { -1, 1 } sphere { 0, 1.4 } }
+  sphere { <0, 0, -1.15>, 0.3 }
+  cylinder { <0.4, -2, 0>, <0.4, 2, 0>, 0.2 }
+  pigment { rgb <0.9, 0.9, 0.9> } finish { F }
+  rotate <0, 25, 0> translate <-2, 1, 0>
+}
+intersection { sphere { 0, 1 } plane { y, 0.2 } pigment { rgb <0.2, 0.5, 1> } finish { F } translate <1.2, 1, 0> }
+difference { cylinder { 0, 1.5*y, 0.6 } cylinder { -0.1*y, 1.6*y, 0.45 } pigment { rgb <0.2, 0.8, 0.3> }
+             finish { F } translate <2.8, 0, 1> }
+difference { torus { 0.8, 0.25 } box { <0, -1, -2>, <2, 1, 2> } pigment { rgb <1, 0.6, 0> } finish { F }
+             rotate <-60, 0, 0> translate <0, 1.6, 2> }
+"""
+    assert _iou(renderizador, texto, tmp_path) > 0.97
+
+
+def _iou(renderizador, texto, tmp_path):
     w, h = 320, 240
     real, _ = renderizar(texto, tmp_path, w, h)
     c = P.interpretar(texto)
@@ -109,8 +162,7 @@ cone { <0, 0, 2>, 0.6, <0, 2, 2>, 0 pigment { rgb <0, 1, 0> } finish { ambient 1
     ptr.setsize(img.byteCount())
     prev = np.frombuffer(ptr, np.uint8).reshape(h, img.bytesPerLine())[:, :w * 3].reshape(h, w, 3)
     a, b = real.max(axis=2) > 30, prev.max(axis=2) > 30
-    iou = (a & b).sum() / (a | b).sum()
-    assert iou > 0.93, iou
+    return (a & b).sum() / (a | b).sum()
 
 
 @pytest.fixture

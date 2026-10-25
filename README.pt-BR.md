@@ -66,7 +66,7 @@ em alta, o GIF e um LEIAME com o comando para renderizar.
 **Pacote .deb** (Ubuntu, Debian, Pop!_OS, Mint) — baixe em [Releases](https://github.com/willehersomo/povlive/releases):
 
 ```bash
-sudo apt install ./povlive_3.3.0_all.deb    # instala também povray, PyQt5 e Pillow
+sudo apt install ./povlive_3.4.0_all.deb    # instala também povray, PyQt5 e Pillow
 povlive cena.pov
 ```
 
@@ -92,8 +92,13 @@ inicialização. Diminuir a imagem não ajuda. Por isso, durante qualquer arrast
 um interpretador próprio executa o básico da linguagem (`#declare`, `#for`, `#while`, `#if`, `#macro`) e transforma
 os objetos em triângulos (esferas, caixas, cilindros, cones, toros, planos, prismas, lathe, blob, CSG), com as
 mesmas matrizes do painel de matrizes. Interpretar leva ~5 ms e desenhar ~9 ms. Nos testes, a silhueta da prévia
-coincide com a do POV-Ray (IoU > 0,93). É uma aproximação: sem sombras nem texturas detalhadas, e `difference`/
-`intersection` mostram só a primeira peça.
+coincide com a do POV-Ray (IoU > 0,93). É uma aproximação: sem sombras nem texturas detalhadas.
+
+**CSG na prévia**: `difference` e `intersection` são recortados de verdade. Cada forma tem um teste exato de "este
+ponto está dentro?" (com as transformações), e a superfície de `A - B` é a parte de A fora de B mais a parte de B
+dentro de A. Os triângulos perto das outras peças são subdivididos e cortados na fronteira, achada por bisseção ao
+longo das arestas. Num dado com furos, um tubo e uma meia esfera, a silhueta bate 98,9% com a do POV-Ray. O
+recorte fica guardado: arrastar outro objeto, ou mover o próprio CSG, não refaz as contas (~6 ms por quadro).
 
 Sem OpenGL, o app usa um plano B: com a câmera livre ligada e o mouse parado, ele pré-renderiza
 a cena em 36 ângulos × 7 alturas (252 imagens) usando o modo de animação do POV-Ray: 12 processos em prioridade baixa,
@@ -125,6 +130,7 @@ povlive_app/
   editor.py             editor de código (sintaxe, pares, autocompletar, busca)
   visor.py              visor de imagem (zoom, câmera livre, destaque, setas), 4 vistas, histórico
   previa3d.py           prévia instantânea: interpretador da cena + desenho em OpenGL
+  csg.py                difference/intersection na prévia (sólidos, subdivisão, recorte)
   interacao.py          prévia durante os arrastes, setas de mover/girar, animação suave
   cache_orbita.py       cache de órbita da câmera livre
   sdl.py                leitura do código POV-Ray: blocos, expressões, transformações
@@ -145,7 +151,7 @@ extras/povlive_web.py   primeira versão (editor no navegador)
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 149 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
+São 151 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
 tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia nos dois idiomas (nenhum pode dar erro
 ou aviso), os 7 exercícios (o gabarito passa e o código inicial não), a tradução (todo texto marcado tem versão em
 inglês e nenhum texto em português aparece na interface em inglês), a biblioteca de texturas (cada categoria

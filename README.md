@@ -72,7 +72,7 @@ the `.inc` files, a high-resolution image, the GIF and a README with the command
 [Releases](https://github.com/willehersomo/povlive/releases):
 
 ```bash
-sudo apt install ./povlive_3.3.0_all.deb    # also installs povray, PyQt5 and Pillow
+sudo apt install ./povlive_3.4.0_all.deb    # also installs povray, PyQt5 and Pillow
 povlive scene.pov
 ```
 
@@ -100,7 +100,13 @@ preview**: its own interpreter runs the basics of the language (`#declare`, `#fo
 and turns the objects into triangles (spheres, boxes, cylinders, cones, tori, planes, prisms, lathe, blob, CSG),
 using the same matrices as the matrix panel. Interpreting takes ~5 ms and drawing ~9 ms. In the tests, the
 silhouette of the preview matches POV-Ray's (IoU > 0.93). It is an approximation: no shadows or detailed
-textures, and `difference`/`intersection` only show the first piece.
+textures.
+
+**CSG in the preview**: `difference` and `intersection` are actually cut. Every shape has an exact "is this point
+inside?" test (with its transformations), and the surface of `A - B` is the part of A outside B plus the part of B
+inside A. Triangles near the other pieces are subdivided and cut at the boundary, which is found by bisection
+along the edges. On a die with holes, a tube and a half sphere, the silhouette matches POV-Ray's at 98.9%. The cut
+is cached: dragging another object, or moving the CSG itself, does not redo the math (~6 ms per frame).
 
 Without OpenGL, the app has a plan B: with the free camera on and the mouse still, it pre-renders the scene at
 36 angles × 7 heights (252 images) using POV-Ray's animation mode: 12 low-priority processes, each with a range of
@@ -138,6 +144,7 @@ povlive_app/
   editor.py             code editor (syntax, pairs, autocomplete, search)
   visor.py              image viewer (zoom, free camera, highlight, arrows), 4 views, history
   previa3d.py           instant preview: scene interpreter + OpenGL drawing
+  csg.py                difference/intersection in the preview (solids, subdivision, cutting)
   interacao.py          preview while dragging, move/rotate arrows, smooth animation
   cache_orbita.py       orbit cache for the free camera
   sdl.py                reading POV-Ray code: blocks, expressions, transformations
@@ -161,7 +168,7 @@ this README and the guide are available in English.
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-There are 149 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
+There are 151 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
 formatting must be identical), selection by color, warnings, the 33 guide examples in both languages (none may
 produce an error or warning), the 7 exercises (the answer key passes and the starting code does not), the
 translation, the texture library (every category renders without warnings, dragging a texture onto an object),

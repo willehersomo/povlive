@@ -7,15 +7,15 @@ para o render de verdade.
 Duas partes:
   - interpretar(): executa o básico da linguagem (#declare, #for, #while, #if) e transforma
     os objetos em triângulos (esfera, caixa, cilindro, cone, toro, disco, plano, prisma,
-    lathe, blob, CSG). É uma aproximação: difference/intersection mostram só a primeira peça,
-    texturas viram uma cor, e macros/texto/malhas não aparecem.
+    lathe, blob, CSG). difference/intersection são recortadas de verdade (csg.py). É uma
+    aproximação: texturas viram uma cor, não há sombras, e texto/malhas não aparecem.
   - Renderizador: desenha os triângulos numa área invisível do OpenGL e devolve um QImage.
 """
 import math, os, re
 
 import numpy as np
 
-from . import sdl, matrizes, pov
+from . import sdl, matrizes, pov, csg
 
 LIMITE_TRIANGULOS = 400_000
 LIMITE_ITERACOES = 20_000
@@ -146,11 +146,33 @@ def chao(normal, d, alcance=40, passo=1.0):
 
 class Peca:
     """Triângulos de um objeto já no mundo, com cor e o bloco do código que o gerou."""
-    __slots__ = ("tris", "cor", "cor2", "xadrez", "alfa", "topo")
+    __slots__ = ("tris", "cor", "cor2", "xadrez", "alfa", "topo", "solido")
 
-    def __init__(self, tris, cor, topo, cor2=None, xadrez=None, alfa=1.0):
+    def __init__(self, tris, cor, topo, cor2=None, xadrez=None, alfa=1.0, solido=None):
         self.tris, self.cor, self.topo = tris, cor, topo
         self.cor2, self.xadrez, self.alfa = cor2, xadrez, alfa
+        self.solido = solido      # csg.Solido do objeto (para difference/intersection), ou None
+
+
+class Operandos(list):
+    """Lista de peças que lembra onde termina cada objeto (cada operando de um CSG)."""
+
+    def __init__(self):
+        super().__init__()
+        self.fins = []
+
+    def marcar(self):
+        if not self.fins or self.fins[-1] != len(self):
+            self.fins.append(len(self))
+
+    def grupos(self):
+        ini, r = 0, []
+        for f in self.fins:
+            r.append(self[ini:f])
+            ini = f
+        if ini < len(self):
+            r.append(self[ini:])
+        return r
 
 
 class Cena3D:
@@ -202,6 +224,9 @@ def _cor_de_textura_pronta(trecho):
         if re.search(rx, trecho):
             return cor
     return None
+
+
+_cache_csg = {}    # chave do bloco CSG -> (peças no sistema do bloco, sólido)
 
 
 class Interpretador:
@@ -548,7 +573,12 @@ class Interpretador:
         if not locais and kw not in ("union", "merge", "difference", "intersection", "object", "blob"):
             return
         M = self._matriz(b)
+        solidos = {}
         for p in locais:
+            if p.solido is not None:
+                if id(p.solido) not in solidos:
+                    solidos[id(p.solido)] = p.solido.transformado(M)
+                p.solido = solidos[id(p.solido)]
             if p.cor is None:
                 p.cor = cor
             if cor2 is not None and p.xadrez is not None and p.cor2 is None:
@@ -557,6 +587,8 @@ class Interpretador:
             pts = pts @ M[:3, :3].T + M[:3, 3]
             p.tris = pts.reshape(-1, 3, 3)
             saida.append(p)
+        if isinstance(saida, Operandos):
+            saida.marcar()
 
     def _geometria(self, b, kw, cor, topo):
         a = self._args(b)
@@ -564,20 +596,22 @@ class Interpretador:
         aberto = bool(re.search(r"\bopen\b", corpo))
         v3 = lambda v: np.array(v if isinstance(v, tuple) else (v, v, v), float)
         if kw == "sphere":
-            return [Peca(ESFERA * float(a[1]) + v3(a[0]), cor, topo)]
+            return [Peca(ESFERA * float(a[1]) + v3(a[0]), cor, topo, solido=csg.esfera(v3(a[0]), float(a[1])))]
         if kw == "box":
-            return [Peca(caixa(v3(a[0]), v3(a[1])), cor, topo)]
+            return [Peca(caixa(v3(a[0]), v3(a[1])), cor, topo, solido=csg.caixa(v3(a[0]), v3(a[1])))]
         if kw == "cylinder":
-            return [Peca(tronco(v3(a[0]), float(a[2]), v3(a[1]), float(a[2]), aberto), cor, topo)]
+            return [Peca(tronco(v3(a[0]), float(a[2]), v3(a[1]), float(a[2]), aberto), cor, topo,
+                         solido=csg.tronco(v3(a[0]), float(a[2]), v3(a[1]), float(a[2])))]
         if kw == "cone":
-            return [Peca(tronco(v3(a[0]), float(a[1]), v3(a[2]), float(a[3]), aberto), cor, topo)]
+            return [Peca(tronco(v3(a[0]), float(a[1]), v3(a[2]), float(a[3]), aberto), cor, topo,
+                         solido=csg.tronco(v3(a[0]), float(a[1]), v3(a[2]), float(a[3])))]
         if kw == "torus":
-            return [Peca(toro(float(a[0]), float(a[1])), cor, topo)]
+            return [Peca(toro(float(a[0]), float(a[1])), cor, topo, solido=csg.toro(float(a[0]), float(a[1])))]
         if kw == "disc":
             return [Peca(disco(v3(a[0]), v3(a[1]), float(a[2]), float(a[3]) if len(a) > 3 else 0), cor, topo)]
         if kw == "plane":
             tris, par = chao(v3(a[0]), float(a[1]))
-            return [Peca(tris, cor, topo, xadrez=par)]
+            return [Peca(tris, cor, topo, xadrez=par, solido=csg.plano(v3(a[0]), float(a[1])))]
         if kw in ("lathe", "sor"):
             mm = re.match(r"\s*(linear_spline|quadratic_spline|cubic_spline|bezier_spline)?", corpo)
             vals = self._args_a_partir(b.abre + 1 + mm.end())
@@ -585,7 +619,7 @@ class Interpretador:
             pts = [v[:2] for v in vals[1:1 + n] if isinstance(v, tuple)]
             if (kw == "sor" or (mm.group(1) or "").startswith(("cubic", "quadratic"))) and len(pts) > 3:
                 pts = pts[1:-1]   # nesses tipos, o primeiro e o último ponto só controlam a curva
-            return [Peca(revolucao(pts), cor, topo)] if len(pts) >= 2 else []
+            return [Peca(revolucao(pts), cor, topo, solido=csg.revolucao(pts))] if len(pts) >= 2 else []
         if kw == "prism":
             mm = re.match(r"\s*(?:linear_sweep|conic_sweep|linear_spline|quadratic_spline|cubic_spline|bezier_spline|\s)*",
                           corpo)
@@ -593,20 +627,28 @@ class Interpretador:
             if len(vals) >= 4:
                 y1, y2, n = float(vals[0]), float(vals[1]), int(vals[2])
                 pts = [v[:2] for v in vals[3:3 + n] if isinstance(v, tuple)]
-                return [Peca(prisma(y1, y2, pts), cor, topo)]
+                return [Peca(prisma(y1, y2, pts), cor, topo, solido=csg.prisma(y1, y2, pts))]
             return []
         if kw == "superellipsoid":
-            return [Peca(ESFERA.copy(), cor, topo)]
+            return [Peca(ESFERA.copy(), cor, topo, solido=csg.esfera((0, 0, 0), 1.0))]
         if kw == "blob":
             return self._blob(b, cor, topo)
         if kw in ("difference", "intersection"):
-            # aproximação: mostra só a primeira peça (a de onde se tira / que se corta)
-            filhos = []
-            for f in b.filhos:
-                if f.kw in sdl.OBJETOS:
-                    self._objeto(f, filhos, topo, cor)
-                    break
-            return filhos
+            chave = self._chave_csg(b, cor)
+            guardado = _cache_csg.get(chave)
+            if guardado is not None:
+                pecas_g, solido = guardado
+                return [Peca(t, c, topo, c2, x, al, solido) for t, c, c2, x, al in pecas_g]
+            ops = Operandos()
+            self.executar(b.abre + 1, b.fecha, ops, topo, cor, b)
+            grupos = [g for g in ops.grupos() if g]
+            if not grupos:
+                return []
+            pecas, solido = csg.combinar(grupos, kw)
+            if len(_cache_csg) > 64:
+                _cache_csg.pop(next(iter(_cache_csg)))
+            _cache_csg[chave] = ([(p.tris, p.cor, p.cor2, p.xadrez, p.alfa) for p in pecas], solido)
+            return pecas
         if kw in ("union", "merge"):
             filhos = []
             self.executar(b.abre + 1, b.fecha, filhos, topo, cor, b)
@@ -624,6 +666,35 @@ class Interpretador:
                 return tmp
             return []
         return []
+
+    def _chave_csg(self, b, cor):
+        """O que define o resultado de um CSG: o texto do bloco e o valor de cada nome que ele usa
+        (variáveis, objetos declarados e macros, até 3 níveis). Assim, arrastar um número em outro
+        objeto não refaz o recorte."""
+        corpo = list(self.m[b.abre:b.fecha])
+        for _t, _v, orig, pos, _e in sdl.transformacoes(self.texto, b, self.vs, self.m):
+            for k in range(pos - b.abre, min(len(corpo), pos - b.abre + len(orig))):
+                corpo[k] = " "      # as transformações do próprio bloco não mudam o recorte
+        corpo = "".join(corpo)
+        partes, vistos = [corpo, repr(cor)], set()
+        trechos = [corpo]
+        for _ in range(3):
+            novos = []
+            for t in trechos:
+                for nome in set(re.findall(r"[A-Za-z_]\w*", t)) - vistos:
+                    vistos.add(nome)
+                    if nome in self.declarados:
+                        d = self.declarados[nome]
+                        novos.append(self.m[d.kw_ini:(d.fecha or d.abre) + 1])
+                        partes.append(nome + "=" + novos[-1])
+                    elif nome in self.macros:
+                        _ps, ini, fim = self.macros[nome]
+                        novos.append(self.m[ini:fim])
+                        partes.append(nome + "=" + novos[-1])
+                    elif nome in self.vs:
+                        partes.append(f"{nome}={self.vs[nome]!r}")
+            trechos = novos
+        return "\x00".join(partes)
 
     def _args_a_partir(self, p):
         vals = []
@@ -646,7 +717,8 @@ class Interpretador:
                 a = self._args(f)
                 try:
                     if f.kw == "sphere":
-                        pecas.append(Peca(ESFERA * float(a[1]) * 0.75 + np.array(a[0], float), cor, topo))
+                        c, r = np.array(a[0], float), float(a[1]) * 0.75
+                        pecas.append(Peca(ESFERA * r + c, cor, topo, solido=csg.esfera(c, r)))
                 except (IndexError, TypeError, ValueError):
                     pass
         return pecas
