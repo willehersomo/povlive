@@ -8,7 +8,13 @@ DESTINO=${1:?informe a pasta de saída}
 TRAB=$(mktemp -d)
 cd "$TRAB"
 curl -sSL "https://github.com/POV-Ray/povray/archive/refs/tags/v$VERSAO.tar.gz" | tar xz
-cd "povray-$VERSAO/unix"
+cd "povray-$VERSAO"
+# o código recusa o Cygwin só por precaução ("not explicitly supported yet"): trata como o macOS,
+# que também não tem lseek64 (no Cygwin de 64 bits o lseek já é de 64 bits)
+sed -i 's|#error Cygwin detected, but not explicitly supported yet; proceed at your own risk.|#include <unistd.h>\n    #define lseek64(handle,offset,whence) lseek(handle,offset,whence)|' \
+    vfe/unix/syspovconfig.h
+grep -q "Cygwin detected, but not" vfe/unix/syspovconfig.h && { echo "o patch do Cygwin não entrou"; exit 1; }
+cd unix
 ./prebuild.sh
 cd ..
 ./configure COMPILED_BY="PovLive <https://github.com/willehersomo/povlive>" --prefix=/opt/povray \
