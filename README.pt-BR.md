@@ -172,7 +172,7 @@ extras/povlive_web.py   primeira versão (editor no navegador)
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 180 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
+São 181 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
 tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia nos dois idiomas (nenhum pode dar erro
 ou aviso), os 7 exercícios (o gabarito passa e o código inicial não), a tradução (todo texto marcado tem versão em
 inglês e nenhum texto em português aparece na interface em inglês), a biblioteca de texturas (cada categoria

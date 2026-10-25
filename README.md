@@ -187,7 +187,7 @@ this README and the guide are available in English.
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-There are 180 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
+There are 181 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
 formatting must be identical), selection by color, warnings, the 33 guide examples in both languages (none may
 produce an error or warning), the 7 exercises (the answer key passes and the starting code does not), the
 translation, the texture library (every category renders without warnings, dragging a texture onto an object),
