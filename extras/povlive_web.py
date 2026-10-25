@@ -57,7 +57,7 @@ def renderizar(codigo, w, h, qualidade):
 
 
 PAGINA = r"""<!doctype html><html lang="pt-br"><head><meta charset="utf-8">
-<title>POV-Ray ao vivo</title>
+<title>PovLive</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>

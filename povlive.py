@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""POV-Ray ao vivo — lançador. O código fica em povlive_app/.
+"""PovLive — lançador. O código fica em povlive_app/.
 
 Uso:  python3 povlive.py [arquivo.pov ...]
 """

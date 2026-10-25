@@ -1,8 +1,8 @@
-# POV-Ray ao vivo
+# PovLive
 
 [![CI](https://github.com/willehersomo/povlive/actions/workflows/ci.yml/badge.svg)](https://github.com/willehersomo/povlive/actions/workflows/ci.yml)
 
-Editor de cenas [POV-Ray](https://www.povray.org/) para Linux, com o código de um lado e a imagem do outro,
+**PovLive** é um editor de cenas [POV-Ray](https://www.povray.org/) para Linux, com o código de um lado e a imagem do outro,
 renderizada enquanto você digita. Foi feito para estudar Computação Gráfica: além do preview ao vivo, ele
 mostra as **matrizes das transformações**, deixa **clicar e arrastar objetos na imagem**, tem **câmera livre
 com o mouse**, **quatro vistas**, um **guia com 33 exemplos** e **exercícios corrigidos automaticamente**.

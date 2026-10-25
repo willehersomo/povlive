@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=POV-Ray ao vivo
+Name=PovLive
+GenericName=Editor de cenas POV-Ray
 Comment=Editor de cenas POV-Ray com preview em tempo real
 Exec=povlive %F
 Icon=povlive

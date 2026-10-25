@@ -1,5 +1,5 @@
 #!/bin/bash
-# Gera o pacote .deb do POV-Ray ao vivo.  Uso: ./empacotar.sh [pasta de saída]
+# Gera o pacote .deb do PovLive.  Uso: ./empacotar.sh [pasta de saída]
 # Instalar:  sudo apt install ./povlive_<versão>_all.deb   (o apt baixa povray, PyQt5 e Pillow se faltar)
 set -euo pipefail
 AQUI="$(cd "$(dirname "$0")" && pwd)"
@@ -28,7 +28,7 @@ Maintainer: Breno Wille <brenowille23@gmail.com>
 Depends: python3 (>= 3.8), python3-pyqt5, povray, python3-pil, python3-numpy
 Section: graphics
 Priority: optional
-Description: Editor de cenas POV-Ray com preview em tempo real
+Description: PovLive - editor de cenas POV-Ray com preview em tempo real
  Código de um lado e imagem do outro, renderizada enquanto você digita.
  Câmera livre com o mouse, quatro vistas, eixos, animação com clock,
  exportação de GIF, histórico de versões e editor com autocompletar.

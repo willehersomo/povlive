@@ -1,4 +1,4 @@
-"""Janela principal do POV-Ray ao vivo."""
+"""Janela principal do PovLive."""
 import glob, math, os, re, shutil, sys, tempfile, time
 
 from PyQt5.QtCore import Qt, QTimer, QProcess, QFileSystemWatcher, QSettings, QSize
@@ -452,7 +452,7 @@ class Janela(RecursosMixin, QMainWindow):
         if self.cena is not None and self.cena is not e:
             cena = f"  (renderizando {os.path.basename(self.cena.caminho or 'sem título')})"
         sujo = "*" if e.document().isModified() else ""
-        self.setWindowTitle(f"{sujo}{nome}{cena} — POV-Ray ao vivo")
+        self.setWindowTitle(f"{sujo}{nome}{cena} — PovLive")
 
     def _e_cena(self, e):
         return not e.caminho or not e.caminho.lower().endswith(".inc")
@@ -1280,7 +1280,7 @@ def tema_escuro(app):
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("POV-Ray ao vivo")
+    app.setApplicationName("PovLive")
     app.setDesktopFileName("povlive")
     tema_escuro(app)
     j = Janela(sys.argv[1:])

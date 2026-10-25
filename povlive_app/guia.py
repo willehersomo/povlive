@@ -20,7 +20,7 @@ CHAO_PADRAO = "plane { y, 0 pigment { checker rgb 0.85, rgb 0.6 } }"
 
 def cena_completa(trecho, camera=CAMERA_PADRAO, chao=CHAO_PADRAO, extra_inc=()):
     incs = "".join(f'#include "{i}"\n' for i in ("colors.inc",) + tuple(extra_inc))
-    return f"""// Exemplo do Guia do POV-Ray ao vivo.
+    return f"""// Exemplo do guia do PovLive.
 // Mexa à vontade: dica, segure Ctrl e arraste um número para ver o efeito.
 #version 3.7;
 global_settings {{ assumed_gamma 1.0 }}

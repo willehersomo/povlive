@@ -100,7 +100,7 @@ class Exportador(QObject):
         w, h = self.tamanho
         arquivos = sorted(os.path.relpath(os.path.join(r, f), self.trab)
                           for r, _, fs in os.walk(self.trab) for f in fs)
-        leia = [f"Entrega: {base}", f"Gerado em {time.strftime('%d/%m/%Y %H:%M')} pelo POV-Ray ao vivo.", "",
+        leia = [f"Entrega: {base}", f"Gerado em {time.strftime('%d/%m/%Y %H:%M')} pelo PovLive.", "",
                 "Arquivos:"] + [f"  {a}" for a in arquivos] + [
                 "", "Para renderizar de novo:",
                 f"  povray +I{self.nome} +W{w} +H{h} +A0.3"]
