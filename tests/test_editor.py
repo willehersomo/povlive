@@ -113,3 +113,52 @@ def test_rgb_no_cursor(qapp):
     cursor_em(e, e.toPlainText().index("0.5"))
     r = e.rgb_no_cursor()
     assert r is not None
+
+
+def _clicar_no_texto(e, indice):
+    c = e.textCursor()
+    c.setPosition(indice)
+    r = e.cursorRect(c)
+    QTest.mouseClick(e.viewport(), Qt.LeftButton, Qt.NoModifier, QPoint(r.x() + 3, r.center().y()))
+
+
+def test_clique_no_rgb_abre_a_escala(qapp):
+    e = novo(qapp, "sphere { 0, 1 pigment { rgb <1, 0.5, 0> } }")
+    fins = []
+    e.arrasteFim.connect(lambda: fins.append(1))
+    _clicar_no_texto(e, e.toPlainText().index("0.5"))       # clicar num número não abre
+    assert e.seletor_rgb is None
+    _clicar_no_texto(e, e.toPlainText().index("rgb") + 1)
+    sel = e.seletor_rgb
+    assert sel is not None and sel.isVisible()
+    assert [b.value() for b in sel.barras] == [1000, 500, 0]
+    sel.barras[2].setValue(250)                              # arrastar a barra do azul muda o código ao vivo
+    assert "rgb <1, 0.5, 0.25>" in e.toPlainText()
+    sel.campos[1].setValue(0.8)                              # e o campo também
+    assert "rgb <1, 0.8, 0.25>" in e.toPlainText()
+    QTest.keyClick(sel, Qt.Key_Return)
+    assert e.seletor_rgb is None and fins == [1]
+    e.undo()                                                 # tudo vira um único Ctrl+Z
+    assert "rgb <1, 0.5, 0>" in e.toPlainText()
+
+
+def test_escala_rgb_esc_desfaz_e_escalar(qapp):
+    e = novo(qapp, "pigment { rgb 0.4 }")
+    _clicar_no_texto(e, e.toPlainText().index("rgb"))
+    sel = e.seletor_rgb
+    assert [round(c.value(), 3) for c in sel.campos] == [0.4, 0.4, 0.4]
+    sel.barras[0].setValue(900)
+    assert "rgb <0.9, 0.4, 0.4>" in e.toPlainText()          # um rgb escalar vira vetor
+    QTest.keyClick(sel, Qt.Key_Escape)
+    assert e.toPlainText() == "pigment { rgb 0.4 }"
+
+
+def test_escala_rgb_preserva_valor_acima_de_1(qapp):
+    e = novo(qapp, "pigment { rgb <2, 0, 0> }")
+    assert e.abrir_escala_rgb(e.rgb_na_palavra(QPoint(-100, -100)) or None) is False   # cursor fora de um rgb
+    cursor_em(e, e.toPlainText().index("2"))
+    assert e.abrir_escala_rgb()
+    sel = e.seletor_rgb
+    sel.barras[1].setValue(500)
+    assert "rgb <2, 0.5, 0>" in e.toPlainText()
+    sel.close()

@@ -38,6 +38,7 @@ ATALHOS = [
     ("Tab / Shift+Tab", N_("indentar / desindentar seleção")),
     ("Ctrl+Shift+D", N_("duplicar linha")),
     ("Ctrl+Shift+F", N_("formatar (reindentar) o código")),
+    (N_("Clique no rgb"), N_("escala R, G, B para ajustar a cor ao vivo (Esc desfaz)")),
     (N_("Ctrl+Shift+C ou botão direito"), N_("escolher cor do rgb sob o cursor")),
     (N_("Mouse parado numa palavra"), N_("ajuda da sintaxe")),
     (N_("Render e visualização"), None),

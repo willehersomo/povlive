@@ -72,7 +72,7 @@ renderizadas uma vez, em segundo plano, e ficam guardadas.
 
 **Editor**: destaque de sintaxe, autocompletar (inclusive nomes dos `#include`), ajuda ao passar o mouse, fechamento
 automático de `{ ( [ < "`, par de chaves destacado, comentar com Ctrl+/, buscar e substituir, formatar (Ctrl+Shift+F),
-seletor de cor ao vivo, modelos prontos (menu Inserir) e abas. **Ir para a definição** (F12 ou Ctrl+clique num
+**clicar num `rgb` abre uma escala R, G, B** que muda a cor ao vivo (com o seletor completo a um clique), modelos prontos (menu Inserir) e abas. **Ir para a definição** (F12 ou Ctrl+clique num
 nome, também dentro de `.inc`), **renomear** um nome no arquivo inteiro (F2) e a **árvore da cena** (F4), com os
 objetos em hierarquia (CSG, `#declare`, laços): clicar num deles leva ao código e destaca o objeto na imagem.
 
@@ -85,18 +85,18 @@ convertidos para os do POV-Ray) e aparecem também na prévia instantânea.
 
 Baixe em [Releases](https://github.com/willehersomo/povlive/releases):
 
-- **Windows**: `PovLive-3.6.0-setup.exe` (instalador) ou `PovLive-3.6.0-windows.zip` (portátil). O POV-Ray vem
+- **Windows**: `PovLive-3.7.0-setup.exe` (instalador) ou `PovLive-3.7.0-windows.zip` (portátil). O POV-Ray vem
   junto, não precisa instalar mais nada. O instalador ainda não tem assinatura digital, então o SmartScreen pode
   avisar na primeira vez (*Mais informações → Executar assim mesmo*).
-- **Qualquer Linux**: `PovLive-3.6.0-x86_64.AppImage` — dê permissão de execução e rode (o POV-Ray vem junto):
+- **Qualquer Linux**: `PovLive-3.7.0-x86_64.AppImage` — dê permissão de execução e rode (o POV-Ray vem junto):
 
   ```bash
-  chmod +x PovLive-3.6.0-x86_64.AppImage && ./PovLive-3.6.0-x86_64.AppImage cena.pov
+  chmod +x PovLive-3.7.0-x86_64.AppImage && ./PovLive-3.7.0-x86_64.AppImage cena.pov
   ```
 - **Ubuntu, Debian, Pop!_OS, Mint**: o pacote `.deb`, que usa o POV-Ray do sistema:
 
   ```bash
-  sudo apt install ./povlive_3.6.0_all.deb    # instala também povray, PyQt5 e Pillow
+  sudo apt install ./povlive_3.7.0_all.deb    # instala também povray, PyQt5 e Pillow
   povlive cena.pov
   ```
 
@@ -186,7 +186,7 @@ extras/povlive_web.py   primeira versão (editor no navegador)
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 223 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
+São 226 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
 tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia nos dois idiomas (nenhum pode dar erro
 ou aviso), os 7 exercícios (o gabarito passa e o código inicial não), a tradução (todo texto marcado tem versão em
 inglês e nenhum texto em português aparece na interface em inglês), a biblioteca de texturas (cada categoria

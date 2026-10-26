@@ -488,6 +488,13 @@ TEXTOS = {
     "R certo (depois de conferir)": "correct R (after checking)",
     "{} de {} campos certos": "{} of {} fields correct",
     "treino 3D nº {}": "3D practice #{}",
+    # escala RGB
+    "Acima de 1 a cor brilha mais que o branco (vale no POV-Ray)": "Above 1 the color is brighter than white (valid in POV-Ray)",
+    "Enter ou clique fora: fica · Esc: desfaz": "Enter or click outside: keep · Esc: undo",
+    "Mais cores…": "More colors…",
+    "Clique no rgb": "Click on rgb",
+    "escala R, G, B para ajustar a cor ao vivo (Esc desfaz)": "R, G, B sliders to adjust the color live (Esc undoes)",
+    "Abre o seletor completo (matiz, saturação, cores salvas)": "Opens the full picker (hue, saturation, saved colors)",
 }
 
 # Insert menu templates whose code changes in English ("|" marks where the cursor goes)

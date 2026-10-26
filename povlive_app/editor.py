@@ -1,11 +1,12 @@
 """Editor de código POV-Ray (QPlainTextEdit com os extras)."""
 import re
 
-from PyQt5.QtCore import Qt, QRect, QSize, QRegExp, QStringListModel, pyqtSignal, QEvent
+from PyQt5.QtCore import Qt, QPoint, QRect, QSize, QRegExp, QStringListModel, pyqtSignal, QEvent
 from PyQt5.QtGui import (QColor, QFont, QPainter, QSyntaxHighlighter, QTextCharFormat, QTextFormat,
                          QTextCursor, QTextDocument)
 from PyQt5.QtWidgets import (QPlainTextEdit, QWidget, QTextEdit, QCompleter, QToolTip, QColorDialog,
-                             QHBoxLayout, QLineEdit, QCheckBox, QToolButton, QLabel, QAction)
+                             QHBoxLayout, QLineEdit, QCheckBox, QToolButton, QLabel, QAction, QFrame,
+                             QGridLayout, QSlider, QDoubleSpinBox, QPushButton)
 
 from . import pov, plataforma
 from .i18n import tr
@@ -125,6 +126,8 @@ class Editor(QPlainTextEdit):
         self.completer.setModelSorting(QCompleter.CaseInsensitivelySortedModel)
         self.completer.activated[str].connect(self._completar)
         self.dlg_cor = None
+        self.seletor_rgb = None
+        self._clique_rgb = None
 
     # ================================================================ números de linha
 
@@ -289,6 +292,11 @@ class Editor(QPlainTextEdit):
                 self.setTextCursor(self.cursorForPosition(ev.pos()))
                 self.irDefinicao.emit(nome)
                 return
+        self._clique_rgb = None
+        if ev.button() == Qt.LeftButton and not ev.modifiers():
+            achado = self.rgb_na_palavra(ev.pos())
+            if achado:
+                self._clique_rgb = (ev.pos(), achado)   # abre a escala ao soltar, se não virou seleção
         super().mousePressEvent(ev)
 
     def mouseMoveEvent(self, ev):
@@ -309,6 +317,8 @@ class Editor(QPlainTextEdit):
         if ctrl and (self._numero_em(ev.pos())):
             self.viewport().setCursor(Qt.SizeHorCursor)
         elif ctrl and (self._include_em(ev.pos()) or self._palavra_em(ev.pos()) in self.nomes):
+            self.viewport().setCursor(Qt.PointingHandCursor)
+        elif not ev.buttons() and self.rgb_na_palavra(ev.pos()):
             self.viewport().setCursor(Qt.PointingHandCursor)
         else:
             self.viewport().setCursor(Qt.IBeamCursor)
@@ -339,6 +349,10 @@ class Editor(QPlainTextEdit):
                 self.arrasteFim.emit()
             return
         super().mouseReleaseEvent(ev)
+        clique, self._clique_rgb = self._clique_rgb, None
+        if (clique and ev.button() == Qt.LeftButton and (ev.pos() - clique[0]).manhattanLength() < 4
+                and not self.textCursor().hasSelection()):
+            self.abrir_escala_rgb(clique[1], self.viewport().mapToGlobal(ev.pos()) + QPoint(0, 14))
 
     def event(self, ev):
         if ev.type() == QEvent.ToolTip:
@@ -358,11 +372,21 @@ class Editor(QPlainTextEdit):
     # ================================================================ seletor de cor
 
     def rgb_no_cursor(self):
-        """(início, fim, (r,g,b), resto) do rgb sob o cursor, ou None."""
+        """(início, fim, (r,g,b), escalar) do rgb sob o cursor, ou None."""
         c = self.textCursor()
-        bloco, col = c.block(), c.positionInBlock()
+        return self._rgb_na_coluna(c.block(), c.positionInBlock())
+
+    def rgb_na_palavra(self, pos):
+        """O rgb cuja palavra-chave (rgb, rgbf, rgbt...) está no ponto pos do viewport, ou None."""
+        c = self.cursorForPosition(pos)
+        if not self.cursorRect(c).adjusted(-12, -2, 12, 2).contains(pos):   # clique longe do texto da linha
+            return None
+        return self._rgb_na_coluna(c.block(), c.positionInBlock(), so_palavra=True)
+
+    def _rgb_na_coluna(self, bloco, col, so_palavra=False):
         for m in pov.RX_RGB.finditer(bloco.text()):
-            if m.start() <= col <= m.end() + 12:  # aceita o cursor um pouco depois (componentes extras)
+            perto = (m.start(1) <= col <= m.end(1)) if so_palavra else (m.start() <= col <= m.end() + 12)
+            if perto:  # sem so_palavra, aceita o cursor um pouco depois (componentes extras)
                 if m.group(5) is not None:
                     v = float(m.group(5))
                     rgb, ini, fim = (v, v, v), m.start(5), m.end(5)
@@ -400,6 +424,45 @@ class Editor(QPlainTextEdit):
             self.arrasteFim.emit()
         dlg.finished.connect(fim_dialogo)
         dlg.open()
+        return True
+
+    def abrir_escala_rgb(self, achado=None, pos_global=None):
+        """Painel pequeno com uma barra para cada canal (R, G, B) que muda o código ao vivo."""
+        achado = achado or self.rgb_no_cursor()
+        if not achado:
+            return False
+        if self.seletor_rgb:
+            self.seletor_rgb.close()
+        ini, fim, rgb, escalar = achado
+        a = {"ini": ini, "len": fim - ini, "primeiro": True}
+        texto_original = self.document().toPlainText()[ini:fim]
+
+        def mudar(r, g, b):
+            txt = ", ".join(pov.fmt_num(round(x, 3)) for x in (r, g, b))
+            self._trocar_trecho(a, "<" + txt + ">" if escalar else txt)
+
+        def fechou(cancelou):
+            self.seletor_rgb = None
+            if cancelou and not a["primeiro"]:
+                self._trocar_trecho(a, texto_original)
+            if not a["primeiro"]:
+                self.arrasteFim.emit()
+            self.setFocus()
+
+        def mais_cores():
+            sel.close()                         # o diálogo completo parte do valor já escolhido
+            c = QTextCursor(self.document())
+            c.setPosition(a["ini"])
+            self.setTextCursor(c)
+            self.escolher_cor()
+
+        sel = self.seletor_rgb = SeletorRGB(rgb, mudar, fechou, mais_cores, self)
+        if pos_global is None:
+            c = QTextCursor(self.document())
+            c.setPosition(ini)
+            pos_global = self.viewport().mapToGlobal(self.cursorRect(c).bottomLeft())
+        sel.move(pos_global)
+        sel.show()
         return True
 
     def contextMenuEvent(self, ev):
@@ -637,6 +700,96 @@ class Editor(QPlainTextEdit):
 
 
 # ==================================================================== barra de busca
+
+class SeletorRGB(QFrame):
+    """Escala RGB: uma barra e um campo por canal; a faixa de cada barra mostra a cor que ela dá.
+
+    Fecha ao clicar fora ou com Enter (fica a cor escolhida); Esc volta a cor original."""
+
+    def __init__(self, rgb, ao_mudar, ao_fechar, mais_cores, parent=None):
+        super().__init__(parent, Qt.Popup)
+        self.setFrameShape(QFrame.StyledPanel)
+        self.setStyleSheet("SeletorRGB{background:#2d2d2d;border:1px solid #555}")
+        self.ao_mudar, self.ao_fechar = ao_mudar, ao_fechar
+        self.cancelou = False
+        self.valores = [max(0.0, float(v)) for v in rgb]
+        g = QGridLayout(self)
+        self.amostra = QLabel()
+        self.amostra.setFixedSize(46, 46)
+        g.addWidget(self.amostra, 0, 0, 3, 1)
+        self.barras, self.campos = [], []
+        for i, nome in enumerate("RGB"):
+            g.addWidget(QLabel(f"<b>{nome}</b>"), i, 1)
+            barra = QSlider(Qt.Horizontal, minimum=0, maximum=1000)
+            barra.setMinimumWidth(220)
+            campo = QDoubleSpinBox(minimum=0.0, maximum=10.0, decimals=3, singleStep=0.01)
+            campo.setToolTip(tr("Acima de 1 a cor brilha mais que o branco (vale no POV-Ray)"))
+            barra.valueChanged.connect(lambda v, i=i: self._mudou(i, v / 1000, "barra"))
+            campo.valueChanged.connect(lambda v, i=i: self._mudou(i, v, "campo"))
+            g.addWidget(barra, i, 2)
+            g.addWidget(campo, i, 3)
+            self.barras.append(barra)
+            self.campos.append(campo)
+        rodape = QHBoxLayout()
+        dica = QLabel(tr("Enter ou clique fora: fica · Esc: desfaz"))
+        dica.setStyleSheet("color:#999")
+        rodape.addWidget(dica)
+        rodape.addStretch()
+        bt = QPushButton(tr("Mais cores…"))
+        bt.setToolTip(tr("Abre o seletor completo (matiz, saturação, cores salvas)"))
+        bt.clicked.connect(mais_cores)
+        rodape.addWidget(bt)
+        g.addLayout(rodape, 3, 0, 1, 4)
+        self._atualizando = True
+        for i in range(3):
+            self.barras[i].setValue(round(min(1.0, self.valores[i]) * 1000))
+            self.campos[i].setValue(self.valores[i])
+        self._atualizando = False
+        self._pintar()
+
+    def _mudou(self, i, v, origem):
+        if self._atualizando:
+            return
+        if origem == "barra" and self.valores[i] > 1 and v >= 1:
+            return                              # a barra só vai até 1: não estraga um valor maior
+        self.valores[i] = v
+        self._atualizando = True
+        if origem == "barra":
+            self.campos[i].setValue(v)
+        else:
+            self.barras[i].setValue(round(min(1.0, v) * 1000))
+        self._atualizando = False
+        self._pintar()
+        self.ao_mudar(*self.valores)
+
+    def _pintar(self):
+        cor = [round(min(1.0, v) * 255) for v in self.valores]
+        self.amostra.setStyleSheet(f"background:rgb({cor[0]},{cor[1]},{cor[2]});border:1px solid #888")
+        for i, barra in enumerate(self.barras):
+            ini, fim = list(cor), list(cor)
+            ini[i], fim[i] = 0, 255
+            barra.setStyleSheet(
+                "QSlider::groove:horizontal{height:12px;border:1px solid #555;border-radius:3px;"
+                f"background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 rgb({ini[0]},{ini[1]},{ini[2]}),"
+                f"stop:1 rgb({fim[0]},{fim[1]},{fim[2]}))}}"
+                "QSlider::handle:horizontal{background:#eee;border:1px solid #333;width:8px;margin:-4px 0;"
+                "border-radius:2px}")
+
+    def keyPressEvent(self, ev):
+        if ev.key() == Qt.Key_Escape:
+            self.cancelou = True
+            self.close()
+        elif ev.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.close()
+        else:
+            super().keyPressEvent(ev)
+
+    def closeEvent(self, ev):
+        super().closeEvent(ev)
+        f, self.ao_fechar = self.ao_fechar, None
+        if f:
+            f(self.cancelou)
+
 
 class BarraBusca(QWidget):
     def __init__(self, obter_editor):

@@ -77,7 +77,7 @@ rendered once, in the background, and cached.
 
 **Editor**: syntax highlighting, autocomplete (including names from `#include` files), help on hover, automatic
 closing of `{ ( [ < "`, matching brace highlight, comment with Ctrl+/, find and replace, format (Ctrl+Shift+F),
-live color picker, ready-made templates (Insert menu) and tabs. **Go to definition** (F12 or Ctrl+click a name,
+**clicking an `rgb` opens R, G, B sliders** that change the color live (with the full picker one click away), ready-made templates (Insert menu) and tabs. **Go to definition** (F12 or Ctrl+click a name,
 also inside `.inc` files), **rename** a name in the whole file (F2) and a **scene tree** (F4) with the objects as a
 hierarchy (CSG, `#declare`, loops): click one to go to its code and see it highlighted in the image.
 
@@ -90,18 +90,18 @@ the scene (axes converted to POV-Ray's), and also show up in the instant preview
 
 Download from [Releases](https://github.com/willehersomo/povlive/releases):
 
-- **Windows**: `PovLive-3.6.0-setup.exe` (installer) or `PovLive-3.6.0-windows.zip` (portable). POV-Ray comes
+- **Windows**: `PovLive-3.7.0-setup.exe` (installer) or `PovLive-3.7.0-windows.zip` (portable). POV-Ray comes
   inside, nothing else to install. The installer is not code-signed yet, so SmartScreen may warn the first time
   (*More info → Run anyway*).
-- **Any Linux**: `PovLive-3.6.0-x86_64.AppImage` — make it executable and run it (POV-Ray comes inside):
+- **Any Linux**: `PovLive-3.7.0-x86_64.AppImage` — make it executable and run it (POV-Ray comes inside):
 
   ```bash
-  chmod +x PovLive-3.6.0-x86_64.AppImage && ./PovLive-3.6.0-x86_64.AppImage scene.pov
+  chmod +x PovLive-3.7.0-x86_64.AppImage && ./PovLive-3.7.0-x86_64.AppImage scene.pov
   ```
 - **Ubuntu, Debian, Pop!_OS, Mint**: the `.deb` package, which uses the system's POV-Ray:
 
   ```bash
-  sudo apt install ./povlive_3.6.0_all.deb    # also installs povray, PyQt5 and Pillow
+  sudo apt install ./povlive_3.7.0_all.deb    # also installs povray, PyQt5 and Pillow
   povlive scene.pov
   ```
 
@@ -202,7 +202,7 @@ this README and the guide are available in English.
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-There are 223 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
+There are 226 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
 formatting must be identical), selection by color, warnings, the 33 guide examples in both languages (none may
 produce an error or warning), the 7 exercises (the answer key passes and the starting code does not), the
 translation, the texture library (every category renders without warnings, dragging a texture onto an object),
