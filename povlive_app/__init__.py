@@ -1,2 +1,2 @@
 """PovLive: editor de cenas com preview em tempo real."""
-__version__ = "3.5.0"
+__version__ = "3.6.0"

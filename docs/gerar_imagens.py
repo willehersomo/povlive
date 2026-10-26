@@ -177,3 +177,29 @@ salvar(j, "texturas.png")
 for x in j._editores():
     x.document().setModified(False)
 j.close()
+
+# treino 3D: questão de câmera respondida em parte e conferida
+from povlive_app import treino3d as T3  # noqa: E402
+from povlive_app.treino3d_ui import Treino3D  # noqa: E402
+
+
+def print_treino3d():
+    d = Treino3D()
+    d.resize(1180, 820)
+    d.show()
+    d.cb_modo.setCurrentIndex(1)
+    d.cb_nivel.setCurrentIndex(2)
+    d.sp_num.setValue(7)
+    for s, linhas in list(zip(d.secoes, d.campos))[:3]:
+        for valores, campos in zip(s["valores"], linhas):
+            for v, c in zip(valores, campos):
+                c.setText(T3.fmt(v))
+    d.campos[2][1][0].setText("0,5")         # um erro, para aparecer a correção
+    d.conferir()
+    d.mostrar_solucao()
+    app.processEvents()
+    salvar(d, "treino3d.png")
+    d.close()
+
+
+print_treino3d()

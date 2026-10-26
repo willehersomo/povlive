@@ -46,6 +46,18 @@ com o mouse**, **quatro vistas**, uma **biblioteca de texturas com miniaturas**,
   `M_rah`, `M_fx`, `M_fy`, rotação e escala em torno de um ponto) sobre uma figura, como a A(1,1) B(2,1) C(2,2) D(1,4)
   da aula. Você digita a matriz 3×3 final e os pontos; o app corrige, desenha a sua resposta e mostra a solução passo
   a passo. Cada questão tem um número, então dá para fazer a mesma que um colega.
+- **Treino 3D** (menu Ajuda), em três modos, com uma vista 3D que gira com o mouse:
+  - **transformações 3D**: matrizes 4×4 com `M_rx`, `M_ry`, `M_rz` horárias (a extensão do `M_r` da aula),
+    as anti-horárias `M_rah…` (que são o `rotate` do POV-Ray), reflexões e rotação em torno de uma reta;
+  - **câmera e projeção**: a matriz de visão de uma câmera com `location`/`look_at`, os pontos em coordenadas da
+    câmera, a projeção perspectiva ou ortográfica e o pixel na imagem, com a tela da câmera desenhada ao lado;
+  - **iluminação de Phong**: L, V, N·L, o vetor refletido R, R·V e a intensidade I.
+
+  A solução vem passo a passo, com o código equivalente em POV-Ray, e **Ver no POV-Ray** abre a cena da questão
+  numa aba. Os testes conferem as contas com o próprio POV-Ray: o `vtransform` das transformações, a posição de
+  cada ponto na imagem renderizada e a cor do pixel no Phong.
+
+![Treino 3D: questão de câmera](docs/img/treino3d.png)
 
 | Quatro vistas | Matrizes | Exercício |
 |---|---|---|
@@ -73,18 +85,18 @@ convertidos para os do POV-Ray) e aparecem também na prévia instantânea.
 
 Baixe em [Releases](https://github.com/willehersomo/povlive/releases):
 
-- **Windows**: `PovLive-3.5.0-setup.exe` (instalador) ou `PovLive-3.5.0-windows.zip` (portátil). O POV-Ray vem
+- **Windows**: `PovLive-3.6.0-setup.exe` (instalador) ou `PovLive-3.6.0-windows.zip` (portátil). O POV-Ray vem
   junto, não precisa instalar mais nada. O instalador ainda não tem assinatura digital, então o SmartScreen pode
   avisar na primeira vez (*Mais informações → Executar assim mesmo*).
-- **Qualquer Linux**: `PovLive-3.5.0-x86_64.AppImage` — dê permissão de execução e rode (o POV-Ray vem junto):
+- **Qualquer Linux**: `PovLive-3.6.0-x86_64.AppImage` — dê permissão de execução e rode (o POV-Ray vem junto):
 
   ```bash
-  chmod +x PovLive-3.5.0-x86_64.AppImage && ./PovLive-3.5.0-x86_64.AppImage cena.pov
+  chmod +x PovLive-3.6.0-x86_64.AppImage && ./PovLive-3.6.0-x86_64.AppImage cena.pov
   ```
 - **Ubuntu, Debian, Pop!_OS, Mint**: o pacote `.deb`, que usa o POV-Ray do sistema:
 
   ```bash
-  sudo apt install ./povlive_3.5.0_all.deb    # instala também povray, PyQt5 e Pillow
+  sudo apt install ./povlive_3.6.0_all.deb    # instala também povray, PyQt5 e Pillow
   povlive cena.pov
   ```
 
@@ -158,6 +170,7 @@ povlive_app/
   arvore.py, navegar.py  árvore da cena, ir para a definição, renomear
   importar.py           importar OBJ/STL
   treino2d.py, treino2d_ui.py  treino de transformações 2D
+  treino3d.py, treino3d_ui.py  treino 3D: transformações, câmera e Phong
   plataforma.py         diferenças entre Linux e Windows (programa do POV-Ray, caminhos, pastas)
   i18n.py, traducoes_en.py  idioma da interface (textos em português no código, tradução inglesa à parte)
   pov.py, guia.py, guia_en.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
@@ -173,12 +186,13 @@ extras/povlive_web.py   primeira versão (editor no navegador)
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-São 181 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
+São 223 testes: leitura do código, matrizes comparadas com o POV-Ray, formatador (a imagem antes e depois de formatar
 tem que ser idêntica), seleção por cor, avisos, os 33 exemplos do guia nos dois idiomas (nenhum pode dar erro
 ou aviso), os 7 exercícios (o gabarito passa e o código inicial não), a tradução (todo texto marcado tem versão em
 inglês e nenhum texto em português aparece na interface em inglês), a biblioteca de texturas (cada categoria
 renderiza sem aviso, arrastar uma textura até um objeto), o editor, a árvore da cena, ir para a definição e
-renomear, importar OBJ/STL, o treino 2D (a convenção da aula e a correção), testes de integração que abrem o app,
+renomear, importar OBJ/STL, o treino 2D (a convenção da aula e a correção), o treino 3D (as contas
+conferidas com o POV-Ray: transformações, pixel da câmera e cor do Phong), testes de integração que abrem o app,
 digitam, clicam e arrastam na imagem, exportam a entrega e conferem o histórico, e a prévia em OpenGL (a silhueta,
 inclusive com CSG, tem que coincidir com a do POV-Ray). O CI roda tudo no Linux e no Windows, mede a cobertura
 (mínimo de 70%) e gera o `.deb`, o AppImage e o instalador do Windows; numa tag `v*`, tudo é publicado em

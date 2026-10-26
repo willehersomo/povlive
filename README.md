@@ -50,6 +50,19 @@ The interface is available in English and Portuguese.
 - **2D transformations practice** (Help menu): exam-style questions (translate, scale, rotate, reflect, rotate
   about a point) on a figure; type the final 3×3 matrix and the transformed points and the app grades them, plots
   your answer and shows the step-by-step solution. Each question has a number, so classmates can do the same one.
+- **3D practice** (Help menu), in three modes, with a 3D view you rotate with the mouse:
+  - **3D transformations**: 4×4 matrices with clockwise `M_rx`, `M_ry`, `M_rz` (the extension of the course's
+    `M_r`), the counterclockwise `M_rah…` (which are POV-Ray's `rotate`), reflections and rotation about a line;
+  - **camera and projection**: the view matrix of a camera with `location`/`look_at`, the points in camera
+    coordinates, the perspective or orthographic projection and the pixel in the image, with the camera's screen
+    drawn next to it;
+  - **Phong lighting**: L, V, N·L, the reflected vector R, R·V and the intensity I.
+
+  The solution comes step by step, with the equivalent POV-Ray code, and **View in POV-Ray** opens the question's
+  scene in a tab. The tests check the math against POV-Ray itself: `vtransform` for the transformations, the
+  position of each point in the rendered image and the pixel color for Phong.
+
+![3D practice: camera question](docs/img/en/treino3d.png)
 
 | Four views | Matrices | Exercise |
 |---|---|---|
@@ -77,18 +90,18 @@ the scene (axes converted to POV-Ray's), and also show up in the instant preview
 
 Download from [Releases](https://github.com/willehersomo/povlive/releases):
 
-- **Windows**: `PovLive-3.5.0-setup.exe` (installer) or `PovLive-3.5.0-windows.zip` (portable). POV-Ray comes
+- **Windows**: `PovLive-3.6.0-setup.exe` (installer) or `PovLive-3.6.0-windows.zip` (portable). POV-Ray comes
   inside, nothing else to install. The installer is not code-signed yet, so SmartScreen may warn the first time
   (*More info → Run anyway*).
-- **Any Linux**: `PovLive-3.5.0-x86_64.AppImage` — make it executable and run it (POV-Ray comes inside):
+- **Any Linux**: `PovLive-3.6.0-x86_64.AppImage` — make it executable and run it (POV-Ray comes inside):
 
   ```bash
-  chmod +x PovLive-3.5.0-x86_64.AppImage && ./PovLive-3.5.0-x86_64.AppImage scene.pov
+  chmod +x PovLive-3.6.0-x86_64.AppImage && ./PovLive-3.6.0-x86_64.AppImage scene.pov
   ```
 - **Ubuntu, Debian, Pop!_OS, Mint**: the `.deb` package, which uses the system's POV-Ray:
 
   ```bash
-  sudo apt install ./povlive_3.5.0_all.deb    # also installs povray, PyQt5 and Pillow
+  sudo apt install ./povlive_3.6.0_all.deb    # also installs povray, PyQt5 and Pillow
   povlive scene.pov
   ```
 
@@ -170,6 +183,7 @@ povlive_app/
   arvore.py, navegar.py  scene tree, go to definition, rename
   importar.py           OBJ/STL import
   treino2d.py, treino2d_ui.py  2D transformations practice
+  treino3d.py, treino3d_ui.py  3D practice: transformations, camera and Phong
   plataforma.py         Linux/Windows differences (POV-Ray program, paths, folders)
   i18n.py, traducoes_en.py  interface language
   pov.py, guia.py, guia_en.py, exercicios.py, avisos.py, formatador.py, entrega.py, fila.py
@@ -188,12 +202,12 @@ this README and the guide are available in English.
 QT_QPA_PLATFORM=offscreen python3 -m pytest -q
 ```
 
-There are 181 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
+There are 223 tests: code parsing, matrices compared with POV-Ray, the formatter (the image before and after
 formatting must be identical), selection by color, warnings, the 33 guide examples in both languages (none may
 produce an error or warning), the 7 exercises (the answer key passes and the starting code does not), the
 translation, the texture library (every category renders without warnings, dragging a texture onto an object),
 the editor, the scene tree, go to definition and rename, OBJ/STL import, the 2D practice (the course convention and
-the grading), integration tests that open the app, type, click and drag on the image, export a submission and
+the grading), the 3D practice (the math checked against POV-Ray: transformations, camera pixel and Phong color), integration tests that open the app, type, click and drag on the image, export a submission and
 check the history, and the OpenGL preview (its silhouette, CSG included, must match POV-Ray's). CI runs everything
 on Linux and Windows, measures coverage (at least 70%) and builds the `.deb`, the AppImage and the Windows
 installer; on a `v*` tag, everything is published in Releases. See also [CONTRIBUTING.md](CONTRIBUTING.md).
